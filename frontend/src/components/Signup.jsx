@@ -88,15 +88,17 @@ export default function Signup() {
                             {...register('role')}
                             className="w-full bg-[#0A0E1A] border border-white/5 rounded-2xl px-5 py-3.5 text-white font-bold focus:outline-none focus:border-indigo-500/50 transition-all appearance-none cursor-pointer"
                         >
-                            <option value="EXECUTIVE_ADMIN">Executive Master (Admin)</option>
-                            <option value="ROOM_MANAGER">Room Division Manager</option>
-                            <option value="SPA_MANAGER">Spa & Wellness Head</option>
+                            <option value="EXECUTIVE_ADMIN">Executive Manager (Admin)</option>
+                            <option value="ROOM_MANAGER">Room Manager</option>
+                            <option value="SPA_MANAGER">Spa & Park Manager</option>
                         </select>
                         {errors.role && <p className="text-rose-500 text-[10px] font-bold mt-1 px-1">{errors.role.message}</p>}
                     </div>
 
                     <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] block mb-1 px-1">Secure Password</label>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] block mb-1 px-1">
+                            Secure Password <span className="text-[8px] lowercase opacity-60 font-medium">(min 6 characters)</span>
+                        </label>
                         <input
                             {...register('password')}
                             type="password"
@@ -107,7 +109,9 @@ export default function Signup() {
                     </div>
 
                     <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] block mb-1 px-1">Confirm Password</label>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] block mb-1 px-1">
+                            Confirm Password <span className="text-[8px] lowercase opacity-60 font-medium">(match password)</span>
+                        </label>
                         <input
                             {...register('confirmPassword')}
                             type="password"
