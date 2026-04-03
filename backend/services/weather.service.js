@@ -1,17 +1,34 @@
 import axios from 'axios';
-import dotenv from 'dotenv';
 
-dotenv.config();
-
-const API_KEY = process.env.OPENWEATHER_API_KEY;
-const CITY_NAME = process.env.CITY_NAME;
-
-export const getWeatherData = async () => {
+export const getLiveWeather = async (city = 'Bishoftu') => {
     try {
-        const response = await axios.get(`http://api.openweathermap.org/data/2.5/weather?q=${CITY_NAME}&appid=${API_KEY}`);
-        return response.data;
+        // Using wttr.in for a robust, keyless, hackathon-friendly live JSON weather feed
+        const response = await axios.get(`https://wttr.in/${city}?format=j1`, { timeout: 10000 });
+        const desc = response.data.current_condition[0].weatherDesc[0].value.toLowerCase();
+        const tempC = response.data.current_condition[0].temp_C;
+
+        let weatherCategory = 'sunny';
+        // Parse raw string into our AI engine clusters
+        if (desc.includes('rain') || desc.includes('shower') || desc.includes('drizzle') || desc.includes('thunder')) {
+            weatherCategory = 'rainy';
+        } else if (desc.includes('cloud') || desc.includes('overcast') || desc.includes('fog')) {
+            weatherCategory = 'cloudy';
+        } else if (desc.includes('clear') || desc.includes('night') || desc.includes('dark')) {
+            // Native wttr.in payload detects clear skies at night
+            const currentHour = new Date().getHours();
+            if (currentHour >= 18 || currentHour <= 6) {
+                weatherCategory = 'clear night';
+            }
+        }
+
+        return {
+            city: city,
+            rawDescription: desc,
+            category: weatherCategory,
+            tempC: tempC
+        };
     } catch (error) {
-        console.error('Error fetching weather data:', error.message);
-        throw new Error('Failed to fetch weather data');
+        console.error('Error fetching live weather, falling back to sunny baseline:', error.message);
+        return { city, rawDescription: "Fallback Mode", category: 'sunny', tempC: 25 };
     }
 };
