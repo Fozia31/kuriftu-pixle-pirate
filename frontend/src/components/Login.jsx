@@ -83,9 +83,6 @@ export default function Login() {
                     </button>
                 </form>
 
-                <p className="text-center mt-8 text-slate-500 text-sm font-medium">
-                    Don't have access? <Link to="/signup" className="text-indigo-400 hover:text-indigo-300 font-bold ml-1 transition-colors">Request Account</Link>
-                </p>
             </div>
         </div>
     );

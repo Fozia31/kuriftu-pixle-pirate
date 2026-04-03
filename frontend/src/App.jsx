@@ -4,7 +4,6 @@ import { ThemeProvider } from './context/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './components/Dashboard';
 import Login from './components/Login';
-import Signup from './components/Signup';
 
 function App() {
   return (
@@ -13,7 +12,6 @@ function App() {
         <Router>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
             <Route
               path="/"
               element={

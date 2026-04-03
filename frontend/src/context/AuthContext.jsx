@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            const res = await axios.post('http://localhost:3000/api/auth/login', { email, password });
+            const res = await axios.post('https://kuriftu-pixle-pirate.onrender.com/api/auth/login', { email, password });
             setUser(res.data);
             localStorage.setItem('kuriftu_user', JSON.stringify(res.data));
             return { success: true };
@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
 
     const signup = async (name, email, password, role) => {
         try {
-            const res = await axios.post('http://localhost:3000/api/auth/signup', { name, email, password, role });
+            const res = await axios.post('https://kuriftu-pixle-pirate.onrender.com/api/auth/signup', { name, email, password, role });
             setUser(res.data);
             localStorage.setItem('kuriftu_user', JSON.stringify(res.data));
             return { success: true };

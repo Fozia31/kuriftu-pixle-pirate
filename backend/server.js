@@ -17,8 +17,7 @@ const PORT = process.env.PORT || 3000;
 const app = express();
 
 app.use(cors({
-    origin: true, // Reflects the request origin, or use '*'
-    credentials: true,
+    origin: '*', 
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
