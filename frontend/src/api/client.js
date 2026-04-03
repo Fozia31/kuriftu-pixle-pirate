@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-    baseURL: 'http://localhost:3000/api', // Maps to the backend port
+    baseURL: (import.meta.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000') + '/api',
     headers: {
         'Content-Type': 'application/json',
     },

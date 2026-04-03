@@ -7,8 +7,15 @@ export const getLiveStabilityIndex = async () => {
     let analysisLog = [];
 
     try {
-        // Fetch Live Global News for Ethiopia/Bishoftu via Google News RSS
-        const feed = await parser.parseURL('https://news.google.com/rss/search?q=Ethiopia+OR+Bishoftu+OR+Africa+News&hl=en-US&gl=US&ceid=US:en');
+        // Fetch Live Global News for Ethiopia/Bishoftu via Google News RSS - with 5s Timeout
+        const fetchWithTimeout = (url, timeout = 5000) => {
+            return Promise.race([
+                parser.parseURL(url),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('RSS feed request timed out')), timeout))
+            ]);
+        };
+
+        const feed = await fetchWithTimeout('https://news.google.com/rss/search?q=Ethiopia+OR+Bishoftu+OR+Africa+News&hl=en-US&gl=US&ceid=US:en');
 
         const negativeKeywords = ['conflict', 'unrest', 'protest', 'danger', 'rebel', 'war', 'attack', 'crisis', 'advisory', 'instability', 'clash', 'gun', 'kill', 'tension', 'strike', 'drone'];
         const positiveKeywords = ['festival', 'peace', 'agreement', 'growth', 'tourism', 'safe', 'development', 'investment', 'stable', 'celebrate', 'economy', 'export', 'partnership'];
