@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { MessageSquare, Send, Loader2, CheckCircle } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 export default function SMSCampaignCenter({ actions, roomDemand }) {
+    const { theme } = useTheme();
     const [message, setMessage] = useState('');
     const [status, setStatus] = useState('idle'); // idle, sending, success
 
@@ -39,25 +41,25 @@ export default function SMSCampaignCenter({ actions, roomDemand }) {
     if (!roomDemand) return null;
 
     return (
-        <div className="bg-gradient-to-br from-[#120F0D] to-[#261E14] p-6 rounded-[24px] border border-amber-500/20 shadow-2xl relative overflow-hidden group">
+        <div className="bg-white dark:bg-gradient-to-br dark:from-[#120F0D] dark:to-[#261E14] p-6 rounded-[24px] border border-gray-100 dark:border-amber-500/20 shadow-xl dark:shadow-2xl relative overflow-hidden group transition-all duration-500">
             {/* Background Glow */}
             <div className="absolute top-0 right-[-10%] w-48 h-48 bg-amber-500/10 blur-[50px] rounded-full pointer-events-none"></div>
 
             <div className="flex items-center gap-3 mb-5 relative z-10">
-                <div className="bg-gradient-to-br from-amber-500/30 to-amber-600/10 p-2.5 rounded-xl border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
-                    <MessageSquare size={20} className="text-amber-400" />
+                <div className="bg-gold-500/10 dark:bg-amber-500/30 p-2.5 rounded-xl border border-gold-500/20 dark:border-amber-500/30 shadow-sm">
+                    <MessageSquare size={20} className="text-gold-600 dark:text-amber-400" />
                 </div>
                 <div>
-                    <h2 className="text-lg font-black text-amber-50 tracking-wide">Live Marketing</h2>
-                    <p className="text-xs font-bold text-amber-500/70 tracking-widest uppercase">Cross-Service SMS Pipeline</p>
+                    <h2 className="text-lg font-serif font-black text-gray-900 dark:text-amber-50 tracking-wide">Live Marketing</h2>
+                    <p className="text-xs font-bold text-gold-600 dark:text-amber-500/70 tracking-widest uppercase">Cross-Service SMS Pipeline</p>
                 </div>
             </div>
 
             <div className="space-y-5 relative z-10">
                 <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Campaign Broadcast Payload</label>
+                    <label className="text-[10px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-widest block mb-2">Campaign Broadcast Payload</label>
                     <textarea
-                        className="w-full bg-[#060913]/80 border border-white/5 rounded-xl p-4 text-sm font-medium text-amber-50 focus:outline-none focus:border-amber-500/50 focus:bg-[#0A0E1A] transition-colors placeholder:text-slate-600 resize-none shadow-inner leading-relaxed"
+                        className="w-full bg-gray-50 dark:bg-[#060913]/80 border border-gray-200 dark:border-white/5 rounded-xl p-4 text-sm font-medium text-gray-900 dark:text-amber-50 focus:outline-none focus:border-gold-500/50 dark:focus:border-amber-500/50 focus:bg-white dark:focus:bg-[#0A0E1A] transition-colors placeholder:text-gray-400 dark:placeholder:text-slate-600 resize-none shadow-sm leading-relaxed"
                         rows="3"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}

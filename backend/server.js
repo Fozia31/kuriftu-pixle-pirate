@@ -8,6 +8,7 @@ import analysisRouter from './routers/analysis.route.js';
 import simulationRouter from './routers/simulation.route.js';
 import ecosystemRouter from './routers/ecosystem.route.js';
 import authRouter from './routers/auth.route.js';
+import chatRouter from './routers/chat.route.js';
 import { protect } from './middlewares/auth.middleware.js';
 
 dotenv.config();
@@ -31,6 +32,7 @@ app.use('/api/demand', protect, demandRouter);
 app.use('/api/analysis', protect, analysisRouter);
 app.use('/api/simulation', protect, simulationRouter);
 app.use('/api/revenue', protect, ecosystemRouter);
+app.use('/api/chat', chatRouter);
 
 
 app.get('/', (req, res) => {

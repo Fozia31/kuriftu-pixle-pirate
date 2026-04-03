@@ -3,7 +3,7 @@ import axios from 'axios';
 export const getLiveWeather = async (city = 'Bishoftu') => {
     try {
         // Using wttr.in for a robust, keyless, hackathon-friendly live JSON weather feed
-        const response = await axios.get(`https://wttr.in/${city}?format=j1`);
+        const response = await axios.get(`https://wttr.in/${city}?format=j1`, { timeout: 10000 });
         const desc = response.data.current_condition[0].weatherDesc[0].value.toLowerCase();
         const tempC = response.data.current_condition[0].temp_C;
 

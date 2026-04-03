@@ -1,0 +1,54 @@
+{
+    "resort_info": [
+        {
+            "id": "r1",
+            "topic": "resort_overview",
+            "text": "Kuriftu Resort & Spa Bishoftu is a luxury 5-star resort located on the shores of Lake Bishoftu (Lake Hora), 45km from Addis Ababa. It offers 100 premium rooms and suites, world-class spa, waterpark, cinema, and multiple dining venues."
+        },
+        {
+            "id": "r2",
+            "topic": "rooms",
+            "text": "The resort has 100 rooms total: 40 Garden View Deluxe rooms, 30 Lakeside Superior rooms, 20 Lake View Suite rooms, and 10 Presidential Suite units. The base price range is $80–$250 per night. Occupancy peaks on Ethiopian public holidays and Friday-Saturday nights."
+        },
+        {
+            "id": "r3",
+            "topic": "spa",
+            "text": "Kuriftu Spa & Wellness Center offers 50 daily treatment slots. Services include traditional Ethiopian coffee ceremonies, hot stone massages, deep tissue, couples packages, and aromatherapy. Spa demand is highest during rainy season and cool nights when outdoor activities are less attractive. Base spa session price is $40–$120."
+        },
+        {
+            "id": "r4",
+            "topic": "waterpark",
+            "text": "The Kuriftu Waterpark has capacity for 200 visitors per day. It features wave pools, slides, and family areas. Demand is directly tied to sunny, warm weather. Revenue per visitor averages $25. Waterpark is closed during heavy rains. It operates from 9am to 6pm."
+        },
+        {
+            "id": "r5",
+            "topic": "dining_cinema",
+            "text": "The resort has 3 dining venues: Lakeside Grill (outdoor, 80 covers), The Pavilion (indoor, 120 covers), and Lake Café (casual, 40 covers). A private cinema (60 seats) is available for resort guests. Cinema and indoor dining revenue surges during rainy, cold evenings."
+        },
+        {
+            "id": "r6",
+            "topic": "pricing_strategy",
+            "text": "The T-ARO AI recommends dynamic pricing based on demand signals: weather, Ethiopian calendar holidays, news stability index, and expected occupancy. During high-demand periods (holidays, sunny weekends), all prices are raised by 20-40%. During low-demand, the spa and waterpark are bundled with rooms to protect TrevPAR."
+        },
+        {
+            "id": "r7",
+            "topic": "marketing",
+            "text": "Primary guest segments: Ethiopian Diaspora (holidays), Addis Ababa weekend escapers (Fri-Sat), international business travelers (conferences), and domestic family groups. SMS campaigns via EthioTelecom target checked-in guests for upsells. Email campaigns target weekend leisure travelers. Social media targets Diaspora."
+        },
+        {
+            "id": "r8",
+            "topic": "ethiopian_holidays",
+            "text": "Key Ethiopian holidays that generate peak demand: Timket (Epiphany, ~Jan 19), Ethiopian Christmas (Genna, ~Jan 7), Fasika (Easter, April/May), Meskel (Finding of the True Cross, ~Sep 27), Ethiopian New Year (Enkutatash, ~Sep 11). During these periods, occupancy can rise above 95% and a 30-40% price premium is justified."
+        },
+        {
+            "id": "r9",
+            "topic": "stability_index",
+            "text": "The Peace & Stability Index tracks real-time Ethiopian news sentiment. A score above 70 indicates optimal conditions for foreign tourist arrivals. A score below 50 triggers the AI to shift marketing focus to domestic and diaspora audiences, and suggest room-only deals to maintain occupancy."
+        },
+        {
+            "id": "r10",
+            "topic": "trevpar",
+            "text": "TrevPAR (Total Revenue Per Available Room) is the master KPI for this resort. The goal is to maximize revenue across ALL departments, not just rooms. The AI recommends cross-selling spa treatments and waterpark day passes to every room booking to increase TrevPAR beyond basic room revenue. A target TrevPAR of $180+ indicates a very successful day."
+        }
+    ]
+}
