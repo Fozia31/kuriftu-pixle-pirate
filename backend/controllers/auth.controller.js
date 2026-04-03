@@ -10,6 +10,7 @@ const generateToken = (id) => {
 
 export const signup = async (req, res) => {
     try {
+        console.log('Signup Request Body:', req.body);
         // Validate request body
         const validatedData = signupSchema.parse(req.body);
 
@@ -39,9 +40,12 @@ export const signup = async (req, res) => {
             res.status(400).json({ error: 'Invalid user data' });
         }
     } catch (error) {
-        if (error.errors) {
+        console.error('Signup Error:', error);
+        if (error.errors && !error.message.includes('validation failed')) {
+            // Zod errors
             return res.status(400).json({ error: error.errors[0].message });
         }
+        // Mongoose or other errors
         res.status(500).json({ error: error.message });
     }
 };

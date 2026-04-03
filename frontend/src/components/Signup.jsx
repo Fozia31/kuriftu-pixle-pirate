@@ -10,7 +10,11 @@ const signupSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
     password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
     role: z.enum(['EXECUTIVE_ADMIN', 'ROOM_MANAGER', 'SPA_MANAGER'])
+}).refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
 });
 
 export default function Signup() {
@@ -25,7 +29,9 @@ export default function Signup() {
 
     const onSubmit = async (data) => {
         setAuthError('');
-        const res = await signup(data.name, data.email, data.password, data.role);
+        // Don't send confirmPassword to backend
+        const { confirmPassword, ...signupData } = data;
+        const res = await signup(signupData.name, signupData.email, signupData.password, signupData.role);
         if (res.success) {
             navigate('/');
         } else {
@@ -98,6 +104,17 @@ export default function Signup() {
                             placeholder="••••••••"
                         />
                         {errors.password && <p className="text-rose-500 text-[10px] font-bold mt-1 px-1">{errors.password.message}</p>}
+                    </div>
+
+                    <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] block mb-1 px-1">Confirm Password</label>
+                        <input
+                            {...register('confirmPassword')}
+                            type="password"
+                            className="w-full bg-[#0A0E1A] border border-white/5 rounded-2xl px-5 py-3.5 text-white font-medium focus:outline-none focus:border-indigo-500/50 transition-all"
+                            placeholder="••••••••"
+                        />
+                        {errors.confirmPassword && <p className="text-rose-500 text-[10px] font-bold mt-1 px-1">{errors.confirmPassword.message}</p>}
                     </div>
 
                     <button
