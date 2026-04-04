@@ -3,12 +3,7 @@ import { Bot, X, Send, Loader2, Sparkles, ChevronDown } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import apiClient from '../api/client';
 
-const QUICK_QUESTIONS = [
-    "What should I do this weekend?",
-    "Should I raise spa prices today?",
-    "How is the waterpark likely to perform?",
-    "What's my TrevPAR outlook?",
-];
+const __DUMMY__ = []; // Removed Quick actions as requested
 
 function MarkdownText({ text }) {
     const formatted = text
@@ -55,9 +50,11 @@ export default function AssistantBubble({ dashboardContext }) {
             });
             setMessages(prev => [...prev, { role: 'assistant', text: data.response }]);
         } catch (err) {
+            const errorMsg = err.response?.data?.error || '❌ Connectivity issue detected. Please refresh and try again.';
+            const detail = err.response?.data?.detail ? ` (${err.response.data.detail})` : '';
             setMessages(prev => [...prev, {
                 role: 'assistant',
-                text: '❌ I encountered an error. Please ensure you are running a prediction and try again.'
+                text: `${errorMsg}${detail}`
             }]);
         } finally {
             setLoading(false);
@@ -137,23 +134,7 @@ export default function AssistantBubble({ dashboardContext }) {
                         <div ref={messagesEndRef} />
                     </div>
 
-                    {/* Quick Questions */}
-                    {messages.length <= 1 && (
-                        <div className="px-4 pb-2">
-                            <p className="text-[9px] text-slate-600 uppercase tracking-widest font-bold mb-2">Quick Actions</p>
-                            <div className="flex flex-wrap gap-2">
-                                {QUICK_QUESTIONS.map((q) => (
-                                    <button
-                                        key={q}
-                                        onClick={() => sendMessage(q)}
-                                        className="text-[10px] bg-white/5 hover:bg-indigo-500/20 border border-white/10 hover:border-indigo-500/30 text-slate-300 hover:text-white px-3 py-1.5 rounded-xl font-semibold transition-all"
-                                    >
-                                        {q}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                    {/* Quick Questions Removed */}
 
                     {/* Input */}
                     <div className="p-4 border-t border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-transparent">
@@ -163,7 +144,7 @@ export default function AssistantBubble({ dashboardContext }) {
                                 onChange={e => setInput(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
                                 placeholder="Ask your AI advisor..."
-                                className="flex-1 bg-transparent text-white text-sm placeholder:text-slate-600 outline-none font-medium"
+                                className="flex-1 bg-transparent text-slate-900 dark:text-white text-sm placeholder:text-slate-500 dark:placeholder:text-slate-600 outline-none font-medium"
                             />
                             <button
                                 onClick={() => sendMessage()}

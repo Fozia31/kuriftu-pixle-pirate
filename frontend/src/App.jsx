@@ -5,6 +5,10 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './components/Dashboard';
 import Login from './components/Login';
 import Signup from './components/Signup';
+import LandingPage from './components/LandingPage';
+import GuestPortal from './components/GuestPortal';
+import ExperienceDetailPage from './components/experience-details';
+import '@mantine/core/styles.css';
 
 function App() {
   return (
@@ -12,12 +16,33 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            
+            {/* Guest Protected Routes */}
             <Route
-              path="/"
+              path="/experience"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['GUEST']}>
+                  <GuestPortal />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/experience/:id"
+              element={
+                <ProtectedRoute allowedRoles={['GUEST']}>
+                  <ExperienceDetailPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Admin Protected Routes */}
+            <Route
+              path="/admin/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['EXECUTIVE_ADMIN', 'ROOM_MANAGER', 'SPA_MANAGER']}>
                   <Dashboard />
                 </ProtectedRoute>
               }
