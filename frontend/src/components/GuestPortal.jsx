@@ -8,13 +8,13 @@ import { useNavigate } from 'react-router-dom';
 import experienceImage from '../assets/experience.jpg';
 import { EXPERIENCES } from '../data/experiences';
 
-import { 
-    Hotel, 
-    Wind, 
-    Palmtree, 
-    UtensilsCrossed, 
-    Sparkles, 
-    Compass, 
+import {
+    Hotel,
+    Wind,
+    Palmtree,
+    UtensilsCrossed,
+    Sparkles,
+    Compass,
     TrendingUp,
     LogOut,
     Sun,
@@ -37,11 +37,10 @@ export default function GuestPortal() {
     const firstName = user?.name?.split(' ')[0] || 'Guest';
     const [announcement, setAnnouncement] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [weather, setWeather] = useState({ tempC: 24, category: 'Clear', condition: 'Sunny', city: 'Bishoftu' });
+    const [weather, setWeather] = useState({ tempC: 24, category: 'Clear', condition: 'Sunny' });
     const [stability, setStability] = useState({ index: 95, status: 'Stable' });
     const [offers, setOffers] = useState([]);
-    const [branch, setBranch] = useState('Kuriftu Resort & Spa Bishoftu (Debre Zeit)');
-    
+    const [typedName, setTypedName] = useState('');
 
     useEffect(() => {
         const fetchContextData = async () => {
@@ -50,10 +49,9 @@ export default function GuestPortal() {
                     date: new Date().toISOString().split('T')[0],
                     baseRoomPrice: 150,
                     baseSpaPrice: 60,
-                    baseWaterparkPrice: 30,
-                    branch: branch
+                    baseWaterparkPrice: 30
                 });
-                
+
                 // Capture Ecosystem Data & Announcements
                 if (res.data.liveWeatherDetails) {
                     setWeather({
@@ -72,10 +70,10 @@ export default function GuestPortal() {
                 const guestOffers = rawActions.map(act => {
                     const isRainyMsg = act.includes('Rainy') || act.includes('Indoor');
                     const isSpaMsg = act.includes('Spa') || act.includes('Wellness');
-                    
+
                     if (act.includes('Discount') || act.includes('Off') || isRainyMsg) {
-                        return { 
-                            title: isRainyMsg ? 'Rainy Day Privilege' : (isSpaMsg ? 'Wellness Special' : 'Exclusive Privilege'), 
+                        return {
+                            title: isRainyMsg ? 'Rainy Day Privilege' : (isSpaMsg ? 'Wellness Special' : 'Exclusive Privilege'),
                             text: act.replace(/(\$\d+\s➔\s\$\d+)/g, ' Exclusive Rate!'),
                             buttonText: act.includes('%') ? `Claim ${act.match(/\d+%/)[0]} Discount` : 'Claim Privilege'
                         };
@@ -83,16 +81,16 @@ export default function GuestPortal() {
                     return null;
                 }).filter(Boolean);
 
-                setOffers(guestOffers.length > 0 ? guestOffers : [{ 
-                    title: 'Special Recommendation', 
+                setOffers(guestOffers.length > 0 ? guestOffers : [{
+                    title: 'Special Recommendation',
                     text: 'Visit our Spa for an Ethio-Traditional therapy session today.',
                     buttonText: 'Claim Privilege'
                 }]);
             } catch (err) {
                 console.error('Failed to fetch personalized offers:', err.response?.data?.error || err.message);
                 // Fallback UI State
-                setOffers([{ 
-                    title: 'Special Recommendation', 
+                setOffers([{
+                    title: 'Special Recommendation',
                     text: 'Visit our Spa for an Ethio-Traditional therapy session today.',
                     buttonText: 'Claim Privilege'
                 }]);
@@ -101,7 +99,7 @@ export default function GuestPortal() {
             }
         };
         fetchContextData();
-    }, [branch]);
+    }, []);
 
     useEffect(() => {
         let timeoutId;
@@ -149,15 +147,16 @@ export default function GuestPortal() {
     };
 
     const getConciergeMessage = () => {
+        const base = `It's currently ${weather.tempC}°C in Bishoftu.`;
         if (weather.category === 'Rain' || weather.category === 'Cloud') {
-            return `The perfect afternoon for a sanctuary of indoor luxury and spa therapy.`;
+            return `${base} The perfect afternoon for a sanctuary of indoor luxury and spa therapy.`;
         }
         if (stability.status === 'Stable') {
-            return `A perfect day for lakeside serenity and peace.`;
+            return `${base} A perfect day for lakeside serenity and peace.`;
         }
-        return `The perfect afternoon for a breathtaking lakeside escape.`;
+        return `${base} The perfect afternoon for a breathtaking lakeside escape.`;
     };
-    
+
     const getWeatherIcon = () => {
         if (weather.category === 'Rain') return <CloudRain className="text-blue-400" size={16} />;
         if (weather.category === 'Cloud') return <Cloud className="text-slate-400" size={16} />;
@@ -199,7 +198,7 @@ export default function GuestPortal() {
                         <div className="w-10 h-10 rounded-full border border-[#C5A059]/30 bg-[#C5A059]/10 flex items-center justify-center text-[#C5A059] font-black text-xs shadow-lg">
                             {user?.name?.charAt(0).toUpperCase()}
                         </div>
-                        <button 
+                        <button
                             onClick={handleLogout}
                             className="p-3 bg-stone-100 dark:bg-white/5 rounded-full hover:bg-rose-500/10 hover:text-rose-500 transition-all"
                             title="Sign Out"
@@ -221,27 +220,9 @@ export default function GuestPortal() {
                             <span className="animate-pulse">|</span>
                         </span>
                     </h1>
-                    <div className="mt-8 flex flex-col sm:flex-row sm:items-center gap-4 text-slate-500 font-medium tracking-wide animate-fade-in transition-all duration-1000">
-                        <div className="flex items-center gap-3 bg-stone-100 dark:bg-white/5 border border-[var(--border)] dark:border-white/10 px-4 py-2 rounded-full whitespace-nowrap">
-                            {getWeatherIcon()}
-                            <span className="text-xs font-bold text-[var(--foreground)]">{weather.tempC}°C</span>
-                            <span className="text-slate-400">in</span>
-                            <select 
-                                value={branch}
-                                onChange={(e) => setBranch(e.target.value)}
-                                className="bg-transparent border-none outline-none text-xs font-black text-[#C5A059] uppercase tracking-widest cursor-pointer hover:opacity-80 transition-opacity appearance-none pr-1"
-                            >
-                                <option value="Kuriftu Resort & Spa Bishoftu (Debre Zeit)">Bishoftu</option>
-                                <option value="Kuriftu Resort & Spa Bahir Dar">Bahir Dar</option>
-                                <option value="Kuriftu Resort & Spa Entoto">Entoto</option>
-                                <option value="Kuriftu Water Park">Water Park</option>
-                                <option value="Kuriftu African Village (Bishoftu)">African Village</option>
-                            </select>
-                        </div>
-                        <p className="sm:border-l sm:border-[var(--border)] dark:sm:border-white/10 sm:pl-4">
-                            {loading ? 'Initializing Concierge...' : getConciergeMessage()}
-                        </p>
-                    </div>
+                    <p className="mt-6 text-slate-500 font-medium tracking-wide animate-fade-in transition-all duration-1000">
+                        {loading ? 'Initializing Concierge...' : getConciergeMessage()}
+                    </p>
                 </div>
 
                 {/* Dynamic Banner - Flash Offers (Glassmorphic) */}
@@ -291,14 +272,14 @@ export default function GuestPortal() {
                         <div key={svc.id} className="group relative bg-[var(--card)] border border-[var(--border)] dark:border-white/5 rounded-[40px] hover:shadow-2xl hover:shadow-[#C5A059]/5 transition-all duration-700 overflow-hidden hover:-translate-y-3">
                             {/* Image Container */}
                             <div className="aspect-[16/9] overflow-hidden relative">
-                                <img 
-                                    src={svc.image} 
-                                    alt={svc.name} 
-                                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+                                <img
+                                    src={svc.image}
+                                    alt={svc.name}
+                                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                                 />
                                 {/* Overlay Gradient */}
                                 <div className="absolute inset-0 bg-gradient-to-t from-[var(--card)] via-[var(--card)]/20 to-transparent"></div>
-                                
+
                                 {/* AI/Premium Badge */}
                                 <div className="absolute top-6 right-6">
                                     <div className={`px-5 py-2.5 rounded-xl border font-black text-[9px] uppercase tracking-widest flex items-center gap-2 backdrop-blur-xl transition-all duration-500 ${svc.special ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-500 ai-glow animate-pulse-subtle' : 'bg-stone-900/40 border-white/10 text-white'}`}>
@@ -348,10 +329,10 @@ export default function GuestPortal() {
                     <div className="absolute top-0 right-0 w-[40%] h-full bg-gradient-to-l from-[#C5A059]/5 to-transparent"></div>
                     <div className="relative z-10 flex flex-col lg:flex-row items-center gap-16 p-12">
                         <div className="w-56 h-72 sm:w-80 sm:h-96 shrink-0 rounded-[44px] overflow-hidden border border-[var(--border)] shadow-2xl relative group">
-                            <img 
+                            <img
                                 src={experienceImage}
-                                alt="Experience" 
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" 
+                                alt="Experience"
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
                             />
                         </div>
                         <div className="flex-1 text-center lg:text-left">
@@ -363,8 +344,8 @@ export default function GuestPortal() {
                                 {weather.category === 'Rain' ? 'The Art of Indoor Sanctuary.' : 'Designed for your absolute stillness.'}
                             </h2>
                             <p className="text-base text-slate-500 font-medium leading-relaxed max-w-2xl mb-12">
-                                {weather.category === 'Rain' 
-                                    ? `It's a beautiful rainy day in Bishoftu. We've optimized your itinerary for the ultimate indoor luxury experience.` 
+                                {weather.category === 'Rain'
+                                    ? `It's a beautiful rainy day in Bishoftu. We've optimized your itinerary for the ultimate indoor luxury experience.`
                                     : 'Based on local weather forecasts and your interest in wellness, we have optimized your itinerary for private lakeside therapy sessions.'}
                             </p>
                             <button className="bg-[var(--foreground)] text-[var(--background)] px-12 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#C5A059] hover:text-white transition-all duration-500 shadow-xl active:scale-95">
@@ -376,8 +357,8 @@ export default function GuestPortal() {
             </div>
 
             {/* AI Assistant Bubble Context */}
-            <AssistantBubble dashboardContext={{ 
-                userName: user?.name, 
+            <AssistantBubble dashboardContext={{
+                userName: user?.name,
                 role: 'GUEST',
                 preferences: user?.preferences || [],
                 theme: theme,
