@@ -1,4 +1,8 @@
-export const calculateTotalEcosystem = (inputs) => {
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const INFLATION_INDEX = 0.285; // Simulated 28.5% for the current Ethiopian economic context
+
+export const calculateTotalEcosystem = async (inputs) => {
     let { weather, stabilityScore, baseRoomPrice, baseSpaPrice, baseWaterparkPrice, isWeekend, isHoliday } = inputs;
 
     // Default demands (0-100 scale)
@@ -70,32 +74,77 @@ export const calculateTotalEcosystem = (inputs) => {
     const totalRevenue = roomRevenue + spaRevenue + waterparkRevenue;
     const trevpar = totalRevenue / 100;
 
-    // Cross-Service Recommendation Engine
-    let actions = [];
-    if (roomDemand < 50 && waterparkDemand > 70) {
-        actions.push("Day-Guest Premium Bundle: Rooms are empty but Waterpark is full. Offer Cabana+Room bundles to non-resident day-trippers.");
-    }
-    if (spaDemand > 80 && currentWeather === 'rainy') {
-        const newSpaPrice = (baseSpaPrice * 1.15).toFixed(2);
-        actions.push(`Dynamic Yield: High Spa Traffic due to rain. Automatically increase Spa Walk-in pricing by 15% ($${baseSpaPrice} ➔ $${newSpaPrice}) and cross-sell F&B.`);
-    }
-    if (stabilityScore !== undefined && stabilityScore < 50) {
-        actions.push("Crucial Pivot: Peace Stability Index is tracking low. Pivot marketing entirely to local Weekend Domestic Travelers.");
-        const newRoomPrice = (baseRoomPrice * 0.8).toFixed(2);
-        actions.push(`Local Auto-Discount: Safely drop Room Rates by 20% ($${baseRoomPrice} ➔ $${newRoomPrice}) to stimulate domestic bookings.`);
-    }
-    if (roomDemand > 80 && spaDemand < 40) {
-        const newSpaDiscount = (baseSpaPrice * 0.70).toFixed(2);
-        actions.push(`Internal Promotion: Resort occupancy is high but Spa is empty. Push '30% Off Happy Hour Spa' SMS ($${baseSpaPrice} ➔ $${newSpaDiscount}) to current checked-in guests.`);
+    // 4. Inflation Adjustment (NEW)
+    // Adjusting base costs and revenue expectations for inflationary pressure
+    const inflationAdjustedRevenue = totalRevenue * (1 + INFLATION_INDEX);
+    const inflationImpact = totalRevenue * INFLATION_INDEX;
+
+    // AI Strategic Intelligence (GEMINI INTEGRATION)
+    let aiActions = [];
+    let aiYieldMultipliers = { room: 1.2, spa: 1.35, waterpark: 1.25 };
+
+    if (process.env.GEMINI_KEY) {
+        try {
+            const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
+            const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+            
+            const prompt = `
+                Perform a professional Revenue Management analysis for Kuriftu Resort.
+                Context:
+                - Weather: ${currentWeather}
+                - Stability Index: ${stabilityScore}/100
+                - Inflation Rate: ${(INFLATION_INDEX * 100).toFixed(1)}%
+                - Room Demand: ${roomDemand}%
+                - Spa Demand: ${spaDemand}%
+                - Waterpark Demand: ${waterparkDemand}%
+                - Is Weekend: ${isWeekend}
+                - Is Holiday: ${isHoliday} (${inputs.holidayName || 'None'})
+
+                Task:
+                1. Suggest 3 highly specific "Revenue Actions" (max 20 words each).
+                2. Recommend 3 yield multipliers (0.8 to 1.5) for [Room, Spa, Waterpark] as a JSON-style list.
+                
+                Format: 
+                ACTIONS: [Action 1 | Action 2 | Action 3]
+                MULTIPLIERS: [room_mult, spa_mult, water_mult]
+            `;
+            
+            const result = await model.generateContent(prompt);
+            const text = result.response.text();
+            
+            // Basic parsing of AI response
+            const actionMatch = text.match(/ACTIONS: \[(.*?)\]/);
+            const multMatch = text.match(/MULTIPLIERS: \[(.*?)\]/);
+            
+            if (actionMatch) aiActions = actionMatch[1].split('|').map(a => a.trim());
+            if (multMatch) {
+                const vals = multMatch[1].split(',').map(v => parseFloat(v.trim()));
+                if (vals.length === 3 && !vals.some(isNaN)) {
+                    aiYieldMultipliers = { room: vals[0], spa: vals[1], waterpark: vals[2] };
+                }
+            }
+        } catch (err) {
+            console.error("AI Estimation Error, using fallback rules:", err.message);
+        }
     }
 
-    if (actions.length === 0) {
-        actions.push(`System Calibration Complete: Total Revenue ecosystem is stabilized under current parameters. Automatically re-index availability algorithms.`);
-    }
+    // Merge AI suggestions with rule-based actions if AI failed
+    const actions = aiActions.length > 0 ? aiActions : [
+        roomDemand < 50 && waterparkDemand > 70 ? "Bundle empty rooms with high-demand waterpark cabanas." : "Optimize yields.",
+        stabilityScore < 50 ? "Pivot marketing to domestic weekend travelers." : "Focus on high-value segments."
+    ];
 
     return {
         demands: { roomDemand, spaDemand, waterparkDemand },
-        revenue: { totalRevenue, trevpar, beforeTotal: unoptimizedTotal, breakdown: { room: roomRevenue, spa: spaRevenue, waterpark: waterparkRevenue } },
+        revenue: { 
+            totalRevenue: roomRevenue + spaRevenue + waterparkRevenue, // Keep rule-based for now or use AI mults
+            trevpar: (roomRevenue + spaRevenue + waterparkRevenue) / 100,
+            beforeTotal: unoptimizedTotal, 
+            inflationImpact: inflationImpact,
+            inflationAdjustedTotal: inflationAdjustedRevenue,
+            breakdown: { room: roomRevenue, spa: spaRevenue, waterpark: waterparkRevenue } 
+        },
+        inflationRate: (INFLATION_INDEX * 100).toFixed(1),
         actions,
         holidayName: inputs.holidayName,
         ethiopianDate: inputs.ethiopianDate

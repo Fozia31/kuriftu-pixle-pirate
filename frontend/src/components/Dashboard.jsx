@@ -5,12 +5,223 @@ import SMSCampaignCenter from './SMSCampaignCenter';
 import AssistantBubble from './AssistantBubble';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, User, TrendingUp, Sparkles, Compass, Brain, CalendarDays } from 'lucide-react';
+import { LogOut, User, TrendingUp, Sparkles, Compass, Brain, CalendarDays, FileText, Trash2 } from 'lucide-react';
+
 import { useTheme } from '../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect } from 'react';
-import Kenat, { getHoliday } from 'kenat';
+import Kenat, { getHoliday, getHolidaysForYear, HolidayTags } from 'kenat';
+import { useMonthGrid } from 'kenat-ui';
+
+// --- Mini Holiday Feed (compact sidebar widget) ---
+function getCurrentEthiopian() {
+    try { return new Kenat(new Date()).getEthiopian(); }
+    catch { return { year: 2017, month: 7, day: 1 }; }
+}
+const MINI_INIT = getCurrentEthiopian();
+
+function MiniHolidayFeed() {
+    const [options, setOptions] = useState({ year: MINI_INIT.year, month: MINI_INIT.month, holidayFilter: [HolidayTags.PUBLIC, HolidayTags.RELIGIOUS, HolidayTags.CULTURAL] });
+    const { grid, controls } = useMonthGrid(options);
+    if (!grid) return null;
+    const holidays = grid.days.filter(d => d && d.holidays?.length > 0).map(d => ({ day: d.ethiopian.day, name: d.holidays[0].name?.english || d.holidays[0].name }));
+    return (
+        <div className="mt-4 p-5 rounded-3xl bg-stone-50 dark:bg-white/5 border border-[var(--border)] dark:border-white/5">
+            <div className="flex items-center justify-between mb-3">
+                <span className="text-[9px] font-black text-[#C5A059] uppercase tracking-widest">Eth. Holiday Feed</span>
+                <div className="flex items-center gap-1">
+                    <button onClick={controls.goPrev} className="p-1 hover:text-[#C5A059] rounded-lg transition-colors text-slate-400">‹</button>
+                    <span className="text-[9px] font-black text-slate-500 px-1">{grid.monthName} {grid.year}</span>
+                    <button onClick={controls.goNext} className="p-1 hover:text-[#C5A059] rounded-lg transition-colors text-slate-400">›</button>
+                </div>
+            </div>
+            <div className="space-y-2">
+                {holidays.length === 0 ? (
+                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">No major holidays this month</p>
+                ) : (
+                    holidays.map((h, i) => (
+                        <div key={i} className="flex items-center gap-3">
+                            <span className="text-[10px] font-black text-[#C5A059] w-4">{h.day}</span>
+                            <span className="text-[9px] font-bold text-slate-600 dark:text-slate-300 truncate">{h.name}</span>
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+    );
+}
+
+function KnowledgeUpload() {
+    const [status, setStatus] = useState('idle'); // idle, uploading, success, error
+    const [fileName, setFileName] = useState('');
+    const [documents, setDocuments] = useState([]);
+
+    const fetchDocuments = async () => {
+        try {
+            const response = await apiClient.get('/revenue/documents');
+            setDocuments(response.data);
+        } catch (err) {
+            console.error('Failed to fetch documents');
+        }
+    };
+
+    useEffect(() => {
+        fetchDocuments();
+    }, []);
+
+    const handleFileChange = async (e) => {
+        const selectedFile = e.target.files[0];
+        if (!selectedFile) return;
+
+        setFileName(selectedFile.name);
+        setStatus('uploading');
+
+        const formData = new FormData();
+        formData.append('pdf', selectedFile);
+        formData.append('topic', 'Admin Uploaded Manual');
+
+        try {
+            await apiClient.post('/revenue/upload-knowledge', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            setStatus('success');
+            fetchDocuments(); // Refresh the list
+            setTimeout(() => {
+                setStatus('idle');
+                setFileName('');
+            }, 4000);
+        } catch (err) {
+            console.error('Upload failed');
+            setStatus('error');
+            setTimeout(() => setStatus('idle'), 4000);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm("Permanently delete this document and its AI vector memory?")) return;
+        try {
+            await apiClient.delete(`/revenue/documents/${id}`);
+            fetchDocuments();
+        } catch (err) {
+            console.error('Delete failed');
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="mt-8 p-8 rounded-[40px] bg-stone-50 dark:bg-white/5 border border-dashed border-[#C5A059]/30 relative overflow-hidden transition-all hover:bg-stone-100 dark:hover:bg-white/[0.07] group">
+                <div className="absolute top-0 right-0 p-4 opacity-10"><Brain size={40} className="text-[#C5A059]" /></div>
+                
+                <h4 className="text-[10px] font-black text-[#C5A059] uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
+                    <Sparkles size={12} />
+                    Knowledge Enrichment Protocol
+                </h4>
+
+                <div className="relative">
+                    <input 
+                        type="file" 
+                        accept=".pdf" 
+                        onChange={handleFileChange}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" 
+                        id="pdf-upload"
+                        disabled={status === 'uploading'}
+                    />
+                    
+                    <div className={`flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-[32px] transition-all duration-500 ${
+                        status === 'uploading' ? 'border-[#C5A059] bg-[#C5A059]/5 animate-pulse' : 
+                        status === 'success' ? 'border-emerald-500 bg-emerald-500/5' :
+                        status === 'error' ? 'border-rose-500 bg-rose-500/5' :
+                        'border-stone-200 dark:border-white/10 group-hover:border-[#C5A059]/50'
+                    }`}>
+                        {status === 'idle' && (
+                            <>
+                                <Compass className="text-slate-400 mb-4 group-hover:text-[#C5A059] transition-colors" size={32} />
+                                <p className="text-xs font-black text-slate-500 uppercase tracking-widest text-center">
+                                    {fileName || "Select Property Manual (PDF)"}
+                                </p>
+                                <p className="text-[9px] text-slate-400 mt-2 font-bold uppercase tracking-widest opacity-50 text-center">Choose File to Begin Auto-Vectorization</p>
+                            </>
+                        )}
+
+                        {status === 'uploading' && (
+                            <>
+                                <div className="w-10 h-10 border-4 border-[#C5A059]/20 border-t-[#C5A059] rounded-full animate-spin mb-4"></div>
+                                <p className="text-xs font-black text-[#C5A059] uppercase tracking-[0.2em] animate-pulse">Vectorizing Content...</p>
+                                <p className="text-[9px] text-slate-400 mt-2 font-bold uppercase tracking-widest">{fileName}</p>
+                            </>
+                        )}
+
+                        {status === 'success' && (
+                            <>
+                                <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center text-white mb-4 shadow-lg shadow-emerald-500/20">
+                                    <Sparkles size={20} />
+                                </div>
+                                <p className="text-xs font-black text-emerald-500 uppercase tracking-widest text-center">Knowledge Ingested Successfully</p>
+                                <p className="text-[9px] text-emerald-500/60 mt-1 font-bold text-center">AI Brain Updated with New Patterns</p>
+                            </>
+                        )}
+
+                        {status === 'error' && (
+                            <>
+                                <div className="w-12 h-12 rounded-full bg-rose-500 flex items-center justify-center text-white mb-4 shadow-lg shadow-rose-500/20">
+                                    <Compass size={20} className="rotate-45" />
+                                </div>
+                                <p className="text-xs font-black text-rose-500 uppercase tracking-widest">Ingestion Failed</p>
+                                <p className="text-[9px] text-rose-500/60 mt-1 font-bold">Verification Error - Please Retry</p>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Document Library (Bottom View) */}
+            <div className="p-6 rounded-[32px] bg-stone-50 dark:bg-white/5 border border-[var(--border)] dark:border-white/5">
+                <h5 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
+                    <FileText size={10} />
+                    Resort Knowledge Library ({documents.length})
+                </h5>
+                
+                <div className="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                    {documents.length === 0 ? (
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest py-4 text-center opacity-40 italic">No Specialized Knowledge Injected Yet</p>
+                    ) : (
+                        documents.map((doc) => (
+                            <div key={doc._id} className="p-4 rounded-2xl bg-white dark:bg-black/20 border border-[var(--border)] dark:border-white/5 flex items-center justify-between group/item hover:border-[#C5A059]/30 transition-all">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-white/5 flex items-center justify-center text-[#C5A059]">
+                                        <FileText size={18} />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-black text-slate-600 dark:text-slate-300 truncate max-w-[180px]">{doc.name}</p>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                                                {Math.round(doc.size / 1024)} KB · {new Date(doc.uploadDate).toLocaleDateString()}
+                                            </p>
+                                            <span className="text-[7px] px-1.5 py-0.5 rounded-full bg-[#C5A059]/10 text-[#C5A059] font-black uppercase tracking-tighter flex items-center gap-1">
+                                                <Brain size={8} />
+                                                {doc.intelligenceChunks || 0} Chunks
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => handleDelete(doc._id)}
+                                    className="p-2.5 rounded-xl hover:bg-rose-500/10 text-slate-300 hover:text-rose-500 transition-all opacity-0 group-item-hover:opacity-100"
+                                    title="Wipe Intelligence"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+
 
 export default function Dashboard() {
     const { user, logout } = useAuth();
@@ -21,7 +232,8 @@ export default function Dashboard() {
         date: new Date().toISOString().split('T')[0],
         baseRoomPrice: 150,
         baseSpaPrice: 60,
-        baseWaterparkPrice: 30,
+        baseWaterparkPrice: 25,
+        branch: 'Kuriftu Resort & Spa Bishoftu (Debre Zeit)',
     });
 
     const [loading, setLoading] = useState(false);
@@ -33,34 +245,40 @@ export default function Dashboard() {
     const [calendarMode, setCalendarMode] = useState('greg'); // 'greg' or 'eth'
     
     // Ethiopian Date States
-    const initialEthDate = new Kenat();
+    const initialEthDate = new Kenat().getEthiopian();
     const [ethSelected, setEthSelected] = useState({
-        day: initialEthDate.date,
+        day: initialEthDate.day,
         month: initialEthDate.month,
         year: initialEthDate.year
     });
     const [specialDay, setSpecialDay] = useState(null);
 
-    // Initial Dashboard Context Load
+    // Initial Dashboard Context Load (Live Data)
     useEffect(() => {
         const initializeDashboard = async () => {
             setLoading(true);
             try {
-                const response = await apiClient.post('/revenue/total', { 
-                    date: formData.date,
-                    baseRoomPrice: Number(formData.baseRoomPrice),
-                    baseSpaPrice: Number(formData.baseSpaPrice),
-                    baseWaterparkPrice: Number(formData.baseWaterparkPrice)
+                // FETCH ACTUAL LIVE DATA FROM BACKEND FOR SELECTED BRANCH
+                const response = await apiClient.get('/revenue/live', { 
+                    params: { branch: formData.branch } 
                 });
                 setData(response.data);
+                
+                // Keep simulation form in sync with real-time reality
+                setFormData(prev => ({
+                    ...prev,
+                    baseRoomPrice: response.data.pricing?.baseRoomPrice || 150,
+                    baseSpaPrice: response.data.pricing?.baseSpaPrice || 60,
+                    baseWaterparkPrice: response.data.pricing?.baseWaterparkPrice || 25,
+                }));
             } catch (err) {
-                console.warn("Initial load failed, will rely on manual simulation.");
+                console.warn("Initial load failed, falling back to simulation defaults.");
             } finally {
                 setLoading(false);
             }
         };
         initializeDashboard();
-    }, []);
+    }, [formData.branch]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -74,15 +292,17 @@ export default function Dashboard() {
     // Update Ethiopian Selects when Gregorian Date Changes
     useEffect(() => {
         const kDate = new Kenat(new Date(formData.date));
+        const eth = kDate.getEthiopian();
+        
         if (calendarMode === 'greg') {
-            setEthSelected({ day: kDate.date, month: kDate.month, year: kDate.year });
+            setEthSelected({ day: eth.day, month: eth.month, year: eth.year });
         }
         
         // Correctly find special day using Kenat year-wide holiday list
         try {
-            const holidays = getHolidaysForYear(kDate.year, { lang: 'english' });
-            const match = holidays.find(h => h.ethiopian.month === kDate.month && h.ethiopian.day === kDate.date);
-            setSpecialDay(match ? match.name : null);
+            const holidays = getHolidaysForYear(eth.year, { lang: 'english' });
+            const match = holidays.find(h => h.ethiopian.month === eth.month && h.ethiopian.day === eth.day);
+            setSpecialDay(match ? (match.name.english || match.name) : null);
         } catch (e) {
             console.error("Holiday detection failed:", e);
             setSpecialDay(null);
@@ -248,7 +468,8 @@ export default function Dashboard() {
 
             <div className="max-w-7xl mx-auto mt-12 px-6 space-y-10 relative z-10">
 
-                {/* ROW 1: KPIs */}
+
+                {/* ROW 2: KPIs */}
                 {role === 'EXECUTIVE_ADMIN' && (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                         {[
@@ -265,11 +486,40 @@ export default function Dashboard() {
                                 className="bg-[var(--card)] p-8 rounded-[40px] border border-[var(--border)] dark:border-white/5 shadow-sm hover:shadow-xl transition-all duration-500 group"
                             >
                                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4">{kpi.label}</h3>
-                                <p className={`text-5xl font-serif font-black tracking-tighter ${kpi.color || 'text-[var(--foreground)]'}`}>{kpi.value}</p>
+                                <p className={`text-4xl font-serif font-black tracking-tighter ${kpi.color || 'text-[var(--foreground)]'}`}>{kpi.value}</p>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4">{kpi.sub}</p>
                             </motion.div>
                         ))}
                     </div>
+                )}
+
+                {/* Inflation Context (NEW LUXURY CARD) */}
+                {data?.inflationRate && (
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="p-8 rounded-[40px] bg-amber-500/5 border border-amber-500/20 flex flex-col md:flex-row items-center justify-between gap-8 shadow-inner"
+                    >
+                        <div className="flex items-center gap-6">
+                            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 shadow-inner">
+                                <TrendingUp size={32} />
+                            </div>
+                            <div>
+                                <h4 className="text-xl font-serif font-black tracking-tight leading-tight">Economic Pressure: {data.inflationRate}%</h4>
+                                <p className="text-[10px] font-black text-amber-600/60 dark:text-amber-500/60 uppercase tracking-[0.2em] mt-1 italic">Strategically factoring price elasticity for the regional market</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-12">
+                            <div className="text-right">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Impact on GP</p>
+                                <p className="text-xl font-serif font-black text-rose-500">-${data.revenue.inflationImpact?.toLocaleString()}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">True Market Value</p>
+                                <p className="text-2xl font-serif font-black text-emerald-500">${data.revenue.inflationAdjustedTotal?.toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </motion.div>
                 )}
 
                 {/* MIDDLE SECTION */}
@@ -398,22 +648,81 @@ export default function Dashboard() {
                                     <div className="absolute top-0 right-0 p-4 opacity-10"><TrendingUp size={60} /></div>
                                     <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#C5A059] flex items-center gap-3">
                                         <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>
-                                        Real-Time Context
+                                        Real-Time Context: Kuriftu Portfolio
                                     </h4>
-                                    <div className="flex justify-between text-xs font-bold">
-                                        <span className="text-slate-500 uppercase tracking-widest">Weather:</span>
+                                    
+                                    <div className="pt-2">
+                                        <select 
+                                            name="branch" 
+                                            value={formData.branch} 
+                                            onChange={handleInputChange}
+                                            className="w-full p-4 rounded-2xl bg-stone-100 dark:bg-white/10 border border-[var(--border)] dark:border-white/10 text-[10px] font-black uppercase tracking-wider focus:ring-2 focus:ring-[#C5A059] transition-all outline-none appearance-none cursor-pointer"
+                                        >
+                                            <option value="Kuriftu Resort & Spa Bishoftu (Debre Zeit)">Kuriftu Bishoftu (Debre Zeit)</option>
+                                            <option value="Kuriftu Resort & Spa Bahir Dar">Kuriftu Bahir Dar (Lake Tana)</option>
+                                            <option value="Kuriftu Resort & Spa Entoto">Kuriftu Entoto Forest</option>
+                                            <option value="Kuriftu Water Park">Kuriftu Water Park</option>
+                                            <option value="Kuriftu African Village (Bishoftu)">Kuriftu African Village</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="flex justify-between text-xs font-bold pt-2">
+                                        <span className="text-slate-500 uppercase tracking-widest">Weather ({data.liveWeatherDetails.city}):</span>
                                         <span className="text-slate-400">{data.liveWeatherDetails.tempC}°C · {data.liveWeatherDetails.category}</span>
                                     </div>
-                                    <div className="flex justify-between text-xs font-bold">
+                                    <div className="flex justify-between text-xs font-bold items-center">
                                         <span className="text-slate-500 uppercase tracking-widest">Peace Index:</span>
-                                        <span className={data.stabilityDetails?.index < 50 ? 'text-rose-500' : 'text-emerald-500'}>{data.stabilityDetails?.index}/100</span>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-24 h-1.5 bg-stone-200 dark:bg-white/10 rounded-full overflow-hidden">
+                                                <div 
+                                                    className={`h-full transition-all duration-1000 ${data.stabilityDetails?.index < 50 ? 'bg-rose-500' : 'bg-emerald-500'}`}
+                                                    style={{ width: `${data.stabilityDetails?.index}%` }}
+                                                ></div>
+                                            </div>
+                                            <span className={data.stabilityDetails?.index < 50 ? 'text-rose-500' : 'text-emerald-500'}>{data.stabilityDetails?.index}/100</span>
+                                        </div>
                                     </div>
                                 </div>
                             )}
 
-                            <button type="submit" disabled={loading} className="btn-gold w-full mt-auto tracking-[0.2em] text-[10px]">
+                            <button type="submit" disabled={loading} className="btn-gold w-full mt-auto tracking-[0.2em] text-[10px] min-h-[56px]">
                                 {loading ? "Optimizing..." : "Execute Prediction"}
                             </button>
+
+                            {role === 'EXECUTIVE_ADMIN' && (
+                                <div className="mt-4 bg-stone-50 dark:bg-white/5 border border-[var(--border)] dark:border-white/5 rounded-2xl p-6 flex flex-col justify-center text-center group transition-all hover:border-[#C5A059]/30 relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-[#C5A059]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <p className="text-[9px] font-black text-[#C5A059] uppercase tracking-[0.2em] mb-2 relative z-10">Strategic Impact Forecast</p>
+                                    <div className="flex items-center justify-center gap-6 relative z-10">
+                                        <div className="text-center">
+                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 opacity-50">Baseline</p>
+                                            <p className="text-sm font-serif font-black text-slate-300 line-through opacity-30 tabular-nums font-mono">
+                                                ${beforeTotal.toLocaleString()}
+                                            </p>
+                                        </div>
+                                        <div className="w-px h-8 bg-[var(--border)] dark:bg-white/10 shrink-0"></div>
+                                        <div className="text-center">
+                                            <p className="text-[8px] font-black text-[#C5A059] uppercase tracking-widest mb-1">T-ARO AI</p>
+                                            <p className="text-2xl font-serif font-black text-emerald-500 tabular-nums font-mono tracking-tighter">
+                                                {data ? `$${data.revenue.totalRevenue.toLocaleString()}` : "---"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {data && (
+                                        <div className="mt-3 py-1 bg-emerald-500/10 rounded-full inline-block mx-auto px-4 relative z-10">
+                                            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest animate-pulse">
+                                                +${(data.revenue.totalRevenue - beforeTotal).toLocaleString()} Uplift
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Mini Ethiopian Holiday Feed */}
+                            <MiniHolidayFeed />
+
+                            {/* Knowledge Enrichment (Admin ONLY) */}
+                            {role === 'EXECUTIVE_ADMIN' && <KnowledgeUpload />}
                         </form>
                     </div>
 
@@ -499,8 +808,8 @@ export default function Dashboard() {
                                     </select>
                                 </div>
                             </div>
-                            <div className="flex-1 w-full">
-                                <ResponsiveContainer width="100%" height="100%">
+                            <div className="flex-1 w-full min-h-[400px]">
+                                <ResponsiveContainer width="100%" height={400}>
                                     <BarChart data={chartData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} vertical={false} />
                                         <XAxis dataKey="day" stroke="currentColor" tick={{ fontSize: 10, fontWeight: 800, opacity: 0.4 }} tickLine={false} axisLine={false} dy={15} />
@@ -549,29 +858,7 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* BOTTOM: Final Strategy Uplift */}
-                {data && role === 'EXECUTIVE_ADMIN' && (
-                    <div className="bg-[var(--card)] border border-[var(--border)] dark:border-white/5 p-16 rounded-[64px] shadow-3xl text-center relative overflow-hidden group">
-                        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-[#C5A059]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
-                        <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mb-16 relative z-10">Economic Impact Analysis</h2>
-                        <div className="flex flex-col md:flex-row items-center justify-center gap-20 relative z-10">
-                            <div>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Baseline Strategy</p>
-                                <p className="text-5xl font-serif font-black text-slate-300 tracking-tighter">${beforeTotal.toLocaleString()}</p>
-                            </div>
-                            <div className="w-px h-20 bg-[var(--border)] dark:bg-white/5 hidden md:block"></div>
-                            <div>
-                                <p className="text-[10px] font-black text-[#C5A059] uppercase tracking-widest mb-4">T-ARO AI Strategy</p>
-                                <p className="text-8xl font-serif font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-[#C5A059] to-[#D4AF37]">
-                                    ${data.revenue.totalRevenue.toLocaleString()}
-                                </p>
-                                <p className="text-xs font-black text-emerald-500 uppercase tracking-widest mt-6 animate-bounce">
-                                    +${(data.revenue.totalRevenue - beforeTotal).toLocaleString()} Strategic Uplift
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                )}
+
             </div>
 
             {/* AI Assistant Hook */}

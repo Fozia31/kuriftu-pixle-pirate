@@ -25,9 +25,10 @@ export default function GuestPortal() {
     const navigate = useNavigate();
     const [announcement, setAnnouncement] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [weather, setWeather] = useState({ tempC: 24, category: 'Clear', condition: 'Sunny' });
+    const [weather, setWeather] = useState({ tempC: 24, category: 'Clear', condition: 'Sunny', city: 'Bishoftu' });
     const [stability, setStability] = useState({ index: 95, status: 'Stable' });
     const [offers, setOffers] = useState([]);
+    const [branch, setBranch] = useState('Kuriftu Resort & Spa Bishoftu (Debre Zeit)');
 
     useEffect(() => {
         const fetchContextData = async () => {
@@ -36,7 +37,8 @@ export default function GuestPortal() {
                     date: new Date().toISOString().split('T')[0],
                     baseRoomPrice: 150,
                     baseSpaPrice: 60,
-                    baseWaterparkPrice: 30
+                    baseWaterparkPrice: 30,
+                    branch: branch
                 });
                 
                 // Capture Ecosystem Data & Announcements
@@ -86,7 +88,7 @@ export default function GuestPortal() {
             }
         };
         fetchContextData();
-    }, []);
+    }, [branch]);
 
     const handleLogout = () => {
         logout();
@@ -94,14 +96,13 @@ export default function GuestPortal() {
     };
 
     const getConciergeMessage = () => {
-        const base = `It's currently ${weather.tempC}°C in Bishoftu.`;
         if (weather.category === 'Rain' || weather.category === 'Cloud') {
-            return `${base} The perfect afternoon for a sanctuary of indoor luxury and spa therapy.`;
+            return `The perfect afternoon for a sanctuary of indoor luxury and spa therapy.`;
         }
         if (stability.status === 'Stable') {
-            return `${base} A perfect day for lakeside serenity and peace.`;
+            return `A perfect day for lakeside serenity and peace.`;
         }
-        return `${base} The perfect afternoon for a breathtaking lakeside escape.`;
+        return `The perfect afternoon for a breathtaking lakeside escape.`;
     };
 
     const getWeatherIcon = () => {
@@ -193,9 +194,27 @@ export default function GuestPortal() {
                             {user?.name?.split(' ')[0]}.
                         </span>
                     </h1>
-                    <p className="mt-6 text-slate-500 font-medium tracking-wide animate-fade-in transition-all duration-1000">
-                        {loading ? 'Initializing Concierge...' : getConciergeMessage()}
-                    </p>
+                    <div className="mt-8 flex flex-col sm:flex-row sm:items-center gap-4 text-slate-500 font-medium tracking-wide animate-fade-in transition-all duration-1000">
+                        <div className="flex items-center gap-3 bg-stone-100 dark:bg-white/5 border border-[var(--border)] dark:border-white/10 px-4 py-2 rounded-full whitespace-nowrap">
+                            {getWeatherIcon()}
+                            <span className="text-xs font-bold text-[var(--foreground)]">{weather.tempC}°C</span>
+                            <span className="text-slate-400">in</span>
+                            <select 
+                                value={branch}
+                                onChange={(e) => setBranch(e.target.value)}
+                                className="bg-transparent border-none outline-none text-xs font-black text-[#C5A059] uppercase tracking-widest cursor-pointer hover:opacity-80 transition-opacity appearance-none pr-1"
+                            >
+                                <option value="Kuriftu Resort & Spa Bishoftu (Debre Zeit)">Bishoftu</option>
+                                <option value="Kuriftu Resort & Spa Bahir Dar">Bahir Dar</option>
+                                <option value="Kuriftu Resort & Spa Entoto">Entoto</option>
+                                <option value="Kuriftu Water Park">Water Park</option>
+                                <option value="Kuriftu African Village (Bishoftu)">African Village</option>
+                            </select>
+                        </div>
+                        <p className="sm:border-l sm:border-[var(--border)] dark:sm:border-white/10 sm:pl-4">
+                            {loading ? 'Initializing Concierge...' : getConciergeMessage()}
+                        </p>
+                    </div>
                 </div>
 
                 {/* Dynamic Banner - Flash Offers (Glassmorphic) */}
