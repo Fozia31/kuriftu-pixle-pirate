@@ -380,6 +380,7 @@ export default function Dashboard() {
     const getStrategyNarrative = () => {
         if (!data) return null;
         
+        
         const upliftPercent = (((data.revenue.totalRevenue - beforeTotal) / beforeTotal) * 100).toFixed(1);
         const perGuestUplift = ((data.revenue.totalRevenue - beforeTotal) / 100).toFixed(2);
         
