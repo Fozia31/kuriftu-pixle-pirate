@@ -5,10 +5,12 @@ import SMSCampaignCenter from './SMSCampaignCenter';
 import AssistantBubble from './AssistantBubble';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, User, TrendingUp, Sparkles, Compass, Brain } from 'lucide-react';
+import { LogOut, User, TrendingUp, Sparkles, Compass, Brain, CalendarDays } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect } from 'react';
+import Kenat, { getHoliday } from 'kenat';
 
 export default function Dashboard() {
     const { user, logout } = useAuth();
@@ -26,6 +28,39 @@ export default function Dashboard() {
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
     const [syncedActions, setSyncedActions] = useState([]);
+    const [graphFilter, setGraphFilter] = useState('all');
+    const [showEthCalendar, setShowEthCalendar] = useState(true);
+    const [calendarMode, setCalendarMode] = useState('greg'); // 'greg' or 'eth'
+    
+    // Ethiopian Date States
+    const initialEthDate = new Kenat();
+    const [ethSelected, setEthSelected] = useState({
+        day: initialEthDate.date,
+        month: initialEthDate.month,
+        year: initialEthDate.year
+    });
+    const [specialDay, setSpecialDay] = useState(null);
+
+    // Initial Dashboard Context Load
+    useEffect(() => {
+        const initializeDashboard = async () => {
+            setLoading(true);
+            try {
+                const response = await apiClient.post('/revenue/total', { 
+                    date: formData.date,
+                    baseRoomPrice: Number(formData.baseRoomPrice),
+                    baseSpaPrice: Number(formData.baseSpaPrice),
+                    baseWaterparkPrice: Number(formData.baseWaterparkPrice)
+                });
+                setData(response.data);
+            } catch (err) {
+                console.warn("Initial load failed, will rely on manual simulation.");
+            } finally {
+                setLoading(false);
+            }
+        };
+        initializeDashboard();
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -35,6 +70,38 @@ export default function Dashboard() {
     const handleSyncAction = (index) => {
         setSyncedActions(prev => [...prev, index]);
     }
+
+    // Update Ethiopian Selects when Gregorian Date Changes
+    useEffect(() => {
+        const kDate = new Kenat(new Date(formData.date));
+        if (calendarMode === 'greg') {
+            setEthSelected({ day: kDate.date, month: kDate.month, year: kDate.year });
+        }
+        
+        // Correctly find special day using Kenat year-wide holiday list
+        try {
+            const holidays = getHolidaysForYear(kDate.year, { lang: 'english' });
+            const match = holidays.find(h => h.ethiopian.month === kDate.month && h.ethiopian.day === kDate.date);
+            setSpecialDay(match ? match.name : null);
+        } catch (e) {
+            console.error("Holiday detection failed:", e);
+            setSpecialDay(null);
+        }
+    }, [formData.date, calendarMode]);
+
+    const handleEthSelectChange = (field, value) => {
+        const newEth = { ...ethSelected, [field]: Number(value) };
+        setEthSelected(newEth);
+        
+        // Convert to Gregorian and update formData
+        try {
+            const kDate = new Kenat(newEth.year, newEth.month, newEth.day);
+            const greg = kDate.toGregorian();
+            setFormData(prev => ({ ...prev, date: greg.toISOString().split('T')[0] }));
+        } catch (e) {
+            console.error("Invalid Ethiopian Date selected:", e);
+        }
+    };
 
     const handleLogout = () => {
         logout();
@@ -97,7 +164,9 @@ export default function Dashboard() {
         const perGuestUplift = ((data.revenue.totalRevenue - beforeTotal) / 100).toFixed(2);
         
         let insight = "The ecosystem is currently balanced, with room occupancy and ancillary services showing healthy synergy.";
-        if (formData.baseRoomPrice > 210 && data.demands.roomDemand < 60) {
+        if (data.holidayName) {
+            insight = `Detected ${data.holidayName} event. Yield parameters have been auto-adjusted to capture the cultural demand spike.`;
+        } else if (formData.baseRoomPrice > 210 && data.demands.roomDemand < 60) {
             insight = "Current pricing is aggressive. While Yield per room is high, we risk a -15% drop in total departmental flow-through.";
         } else if (data.demands.spaDemand < data.demands.roomDemand * 0.7) {
             insight = "Room occupancy is driving the chart, but ancillary revenue (Spa/Dining) is under-performing by 22%.";
@@ -132,8 +201,37 @@ export default function Dashboard() {
                     </div>
 
                     <div className="flex items-center gap-8">
-                        <ThemeToggle />
-                        <div className="flex items-center gap-4 pl-8 border-l border-[var(--border)] dark:border-white/5">
+                        {/* Ethiopian Calendar Context Badge */}
+                        <AnimatePresence>
+                            {showEthCalendar && data?.ethiopianDate && (
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    className="hidden lg:flex items-center gap-3 px-5 py-2.5 bg-[#C5A059]/5 border border-[#C5A059]/20 rounded-full"
+                                >
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#C5A059] animate-pulse"></div>
+                                    <span className="text-[10px] font-black text-[#C5A059] uppercase tracking-widest leading-none flex items-center gap-2">
+                                        <span className="opacity-60">{formattedTargetDate}</span>
+                                        <span className="opacity-30">|</span>
+                                        <span>{data.ethiopianDate}</span>
+                                    </span>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        <div className="flex items-center gap-3 pr-8 border-r border-[var(--border)] dark:border-white/5">
+                            <button
+                                onClick={() => setShowEthCalendar(!showEthCalendar)}
+                                title="Toggle Ethiopian Calendar Visibility"
+                                className={`p-3 rounded-full transition-all flex items-center justify-center ${showEthCalendar ? 'bg-[#C5A059]/10 text-[#C5A059]' : 'bg-stone-100 dark:bg-white/5 text-slate-400 opacity-50'}`}
+                            >
+                                <CalendarDays size={18} />
+                            </button>
+                            <ThemeToggle />
+                        </div>
+
+                        <div className="flex items-center gap-4">
                             <div className="hidden sm:flex flex-col text-right">
                                 <span className="text-sm font-bold leading-none mb-1">{user?.name}</span>
                                 <span className="text-[9px] font-black text-[#C5A059] uppercase tracking-widest">{role?.replace('_', ' ')}</span>
@@ -185,9 +283,100 @@ export default function Dashboard() {
                         </div>
 
                         <form onSubmit={handleAnalyze} className="space-y-8 flex-1 flex flex-col">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">Target Analysis Date</label>
-                                <input type="date" name="date" value={formData.date} onChange={handleInputChange} className="w-full bg-stone-50 dark:bg-black/20 border border-[var(--border)] dark:border-white/5 rounded-2xl px-6 py-4 text-sm font-bold focus:border-[#C5A059]/50 transition-all outline-none" />
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center px-1">
+                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Target Analysis Date</label>
+                                    <button 
+                                        type="button"
+                                        onClick={() => setCalendarMode(calendarMode === 'greg' ? 'eth' : 'greg')}
+                                        className="text-[9px] font-black uppercase tracking-widest text-[#C5A059] flex items-center gap-2 hover:bg-[#C5A059]/5 px-3 py-1 rounded-full transition-all"
+                                    >
+                                        <Compass size={12} />
+                                        Switch to {calendarMode === 'greg' ? 'Eth' : 'Greg'} Calendar
+                                    </button>
+                                </div>
+
+                                {calendarMode === 'greg' ? (
+                                    <input type="date" name="date" value={formData.date} onChange={handleInputChange} className="w-full bg-stone-50 dark:bg-black/20 border border-[var(--border)] dark:border-white/5 rounded-2xl px-6 py-4 text-sm font-bold focus:border-[#C5A059]/50 transition-all outline-none" />
+                                ) : (
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-3 gap-3">
+                                            <div className="space-y-1.5">
+                                                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">Month</label>
+                                                <select 
+                                                    value={ethSelected.month} 
+                                                    onChange={(e) => handleEthSelectChange('month', e.target.value)}
+                                                    className="w-full bg-stone-50 dark:bg-black/20 border border-[var(--border)] dark:border-white/5 rounded-xl px-3 py-3 text-[10px] font-black tracking-widest uppercase outline-none focus:border-[#C5A059]/50"
+                                                >
+                                                    {['Meskerem', 'Tikimt', 'Hidar', 'Tahsas', 'Tir', 'Yekatit', 'Megabit', 'Miazia', 'Ginbot', 'Sene', 'Hamle', 'Nehasse', 'Pagume'].map((m, i) => (
+                                                        <option key={m} value={i + 1}>{m}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">Day</label>
+                                                <select 
+                                                    value={ethSelected.day} 
+                                                    onChange={(e) => handleEthSelectChange('day', e.target.value)}
+                                                    className="w-full bg-stone-50 dark:bg-black/20 border border-[var(--border)] dark:border-white/5 rounded-xl px-3 py-3 text-[10px] font-black tracking-widest uppercase outline-none focus:border-[#C5A059]/50"
+                                                >
+                                                    {[...Array(ethSelected.month === 13 ? 6 : 30)].map((_, i) => (
+                                                        <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">Year</label>
+                                                <select 
+                                                    value={ethSelected.year} 
+                                                    onChange={(e) => handleEthSelectChange('year', e.target.value)}
+                                                    className="w-full bg-stone-50 dark:bg-black/20 border border-[var(--border)] dark:border-white/5 rounded-xl px-3 py-3 text-[10px] font-black tracking-widest uppercase outline-none focus:border-[#C5A059]/50"
+                                                >
+                                                    {[2015, 2016, 2017, 2018, 2019, 2020].map(y => (
+                                                        <option key={y} value={y}>{y}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        {/* User Friendly Date Context */}
+                                        <div className="px-1 py-2 border-t border-[var(--border)] dark:border-white/5 flex items-center justify-between">
+                                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                                                {new Date(formData.date).toLocaleDateString('en-US', { weekday: 'long' })} · Week {Math.ceil(new Date(formData.date).getDate() / 7)}
+                                            </span>
+                                            {ethSelected.month === 13 && (
+                                                <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest flex items-center gap-1">
+                                                    <div className="w-1 h-1 rounded-full bg-amber-500"></div>
+                                                    Intercalary Month
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {specialDay && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        className="p-4 bg-[#C5A059]/10 border border-[#C5A059]/20 rounded-2xl flex items-center gap-4 group"
+                                    >
+                                        <div className="w-8 h-8 rounded-full bg-[#C5A059] flex items-center justify-center text-white shrink-0 shadow-lg group-hover:scale-110 transition-transform">
+                                            <Sparkles size={14} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black text-[#C5A059] uppercase tracking-widest leading-none mb-1">Cultural Pulse</p>
+                                            <p className="text-sm font-black font-serif text-[var(--foreground)]">{specialDay}</p>
+                                        </div>
+                                    </motion.div>
+                                )}
+
+                                {showEthCalendar && data?.ethiopianDate && (
+                                    <p className="text-[9px] font-black text-[#C5A059] uppercase tracking-widest px-1 mt-2 animate-pulse flex items-center gap-3">
+                                        <span className="w-1.5 h-1.5 bg-[#1A1A1A] dark:bg-white/20 rounded-full"></span>
+                                        <span className="opacity-60">Greg: {formattedTargetDate}</span>
+                                        <span className="opacity-30">|</span>
+                                        <span>Eth: {data.ethiopianDate}</span>
+                                    </p>
+                                )}
                             </div>
 
                             {[
@@ -230,30 +419,7 @@ export default function Dashboard() {
 
                     {/* RIGHT: Visual Analytics */}
                     <div className="lg:col-span-8 flex flex-col gap-10">
-                        <div className="bg-[var(--card)] p-10 rounded-[56px] border border-[var(--border)] dark:border-white/5 shadow-2xl min-h-[450px] flex flex-col">
-                            <div className="flex justify-between items-start mb-12">
-                                <div>
-                                    <h2 className="text-2xl font-serif font-black tracking-tight">Intelligence Yield Map</h2>
-                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mt-2">Predicted Departmental Revenue Share</p>
-                                </div>
-                            </div>
-                            <div className="flex-1 w-full">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={chartData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} vertical={false} />
-                                        <XAxis dataKey="day" stroke="currentColor" tick={{ fontSize: 10, fontWeight: 800, opacity: 0.4 }} tickLine={false} axisLine={false} dy={15} />
-                                        <YAxis hide />
-                                        <Tooltip cursor={{ fill: 'rgba(197, 160, 89, 0.05)' }} contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', padding: '16px' }} />
-                                        <Legend iconType="rect" wrapperStyle={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', paddingTop: '30px', opacity: 0.5 }} />
-                                        {canViewRooms && <Bar dataKey="Rooms" stackId="a" fill={theme === 'dark' ? '#1A1D23' : '#1A1A1A'} radius={[4, 4, 0, 0]} />}
-                                        {canViewActivities && <Bar dataKey="Spa" stackId="a" fill="#C5A059" radius={canViewRooms ? [0, 0, 0, 0] : [4, 4, 0, 0]} />}
-                                        {canViewActivities && <Bar dataKey="F_B" stackId="a" fill="#10b981" radius={[4, 4, 0, 0]} />}
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-                        
-                        {/* Executive Strategy Briefing (New Luxury Component) */}
+                        {/* Executive Strategy Briefing (New Luxury Component) - Moved to Top */}
                         {data && (
                             <motion.div 
                                 initial={{ opacity: 0, y: 20 }}
@@ -309,6 +475,45 @@ export default function Dashboard() {
                                 </div>
                             </motion.div>
                         )}
+
+                        {/* Intelligence Yield Map (Bar Chart) - Moved Below Briefing */}
+                        <div className="bg-[var(--card)] p-10 rounded-[56px] border border-[var(--border)] dark:border-white/5 shadow-2xl min-h-[450px] flex flex-col">
+                            <div className="flex justify-between items-start mb-12">
+                                <div>
+                                    <h2 className="text-2xl font-serif font-black tracking-tight">Intelligence Yield Map</h2>
+                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mt-2">Predicted Departmental Revenue Share</p>
+                                </div>
+
+                                {/* Custom Show in Graph Dropdown */}
+                                <div className="flex items-center gap-4">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Show in Graph:</span>
+                                    <select 
+                                        value={graphFilter} 
+                                        onChange={(e) => setGraphFilter(e.target.value)}
+                                        className="bg-stone-50 dark:bg-white/5 border border-[var(--border)] rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest outline-none focus:border-[#C5A059]/50 transition-all cursor-pointer"
+                                    >
+                                        <option value="all">All Departments</option>
+                                        <option value="rooms">Rooms Only</option>
+                                        <option value="spa">Spa Only</option>
+                                        <option value="f_b">F&B Only</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="flex-1 w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={chartData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} vertical={false} />
+                                        <XAxis dataKey="day" stroke="currentColor" tick={{ fontSize: 10, fontWeight: 800, opacity: 0.4 }} tickLine={false} axisLine={false} dy={15} />
+                                        <YAxis hide />
+                                        <Tooltip cursor={{ fill: 'rgba(197, 160, 89, 0.05)' }} contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', padding: '16px' }} />
+                                        <Legend iconType="rect" wrapperStyle={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', paddingTop: '30px', opacity: 0.5 }} />
+                                        {(graphFilter === 'all' || graphFilter === 'rooms') && canViewRooms && <Bar dataKey="Rooms" stackId="a" fill={theme === 'dark' ? '#1A1D23' : '#1A1A1A'} radius={[4, 4, 0, 0]} />}
+                                        {(graphFilter === 'all' || graphFilter === 'spa') && canViewActivities && <Bar dataKey="Spa" stackId="a" fill="#C5A059" radius={(graphFilter === 'all' && canViewRooms) ? [0, 0, 0, 0] : [4, 4, 0, 0]} />}
+                                        {(graphFilter === 'all' || graphFilter === 'f_b') && canViewActivities && <Bar dataKey="F_B" stackId="a" fill="#10b981" radius={[4, 4, 0, 0]} />}
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
 
                         {/* AI Action Execution (Glassmorphic) */}
                         <div className="p-1 rounded-[40px] bg-gradient-to-r from-stone-200 to-stone-300 dark:from-white/5 dark:to-white/10">

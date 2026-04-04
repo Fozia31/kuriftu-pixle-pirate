@@ -24,6 +24,9 @@ export const setAnnouncementHandler = async (req, res) => {
 export const ecosystemTotalHandler = async (req, res) => {
     try {
         let payload = req.body;
+        if (!payload.date) {
+            payload.date = new Date().toISOString().split('T')[0];
+        }
 
         // Auto-detect Regional Context 
         if (payload.date) {
@@ -33,6 +36,10 @@ export const ecosystemTotalHandler = async (req, res) => {
 
             const holidayInfo = detectEthiopianHoliday(payload.date);
             payload.isHoliday = holidayInfo.isHoliday;
+            payload.holidayName = holidayInfo.name;
+            payload.holidayType = holidayInfo.type;
+            payload.holidayIntensity = holidayInfo.intensity;
+            payload.ethiopianDate = holidayInfo.ethDate;
 
             // Phase 2: Live Weather Sync (Resilient)
             try {

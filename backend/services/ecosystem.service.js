@@ -7,8 +7,30 @@ export const calculateTotalEcosystem = (inputs) => {
     let waterparkDemand = 30;
 
     // 1. Core Logic (Weekends & Holidays)
-    if (isWeekend) { roomDemand += 30; spaDemand += 20; waterparkDemand += 40; }
-    if (isHoliday) { roomDemand += 40; spaDemand += 30; waterparkDemand += 50; }
+    // 1. Core Logic (Weekends & Holidays)
+    if (isWeekend) { 
+        roomDemand += 30; 
+        spaDemand += 20; 
+        waterparkDemand += 40; 
+    }
+    
+    if (isHoliday) { 
+        const intensity = inputs.holidayIntensity || 1.0;
+        const type = inputs.holidayType || 'festive';
+
+        if (type === 'family') {
+            roomDemand += (50 * intensity); // Religious/Family holidays drive staycations
+            spaDemand += (40 * intensity);
+            waterparkDemand += (30 * intensity);
+        } else if (type === 'festive') {
+            roomDemand += (30 * intensity); 
+            spaDemand += (30 * intensity);
+            waterparkDemand += (60 * intensity); // Festive holidays drive day-trippers
+        } else {
+            roomDemand += (20 * intensity);
+            waterparkDemand += (30 * intensity);
+        }
+    }
 
     // 2. Weather Yield Logic
     const currentWeather = weather?.toLowerCase() || 'sunny';
@@ -74,6 +96,8 @@ export const calculateTotalEcosystem = (inputs) => {
     return {
         demands: { roomDemand, spaDemand, waterparkDemand },
         revenue: { totalRevenue, trevpar, beforeTotal: unoptimizedTotal, breakdown: { room: roomRevenue, spa: spaRevenue, waterpark: waterparkRevenue } },
-        actions
+        actions,
+        holidayName: inputs.holidayName,
+        ethiopianDate: inputs.ethiopianDate
     };
 };
