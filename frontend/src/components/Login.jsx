@@ -70,7 +70,7 @@ export default function Login() {
                     <div className="inline-flex items-center justify-center bg-gradient-to-br from-[#C5A059] to-[#D4AF37] w-14 h-14 rounded-[22px] shadow-lg shadow-amber-500/20 mb-6">
                         <LogIn className="text-white" size={28} />
                     </div>
-                    <h1 className="text-4xl font-serif font-black tracking-tight mb-2">Member Login</h1>
+                    <h1 className="text-4xl font-serif font-black tracking-tight mb-2 text-[var(--foreground)]">Member Login</h1>
                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Access the Kuriftu Intelligence Ecosystem</p>
                 </div>
 

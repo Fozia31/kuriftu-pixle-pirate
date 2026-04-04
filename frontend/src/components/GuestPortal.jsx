@@ -34,11 +34,13 @@ export default function GuestPortal() {
     const { user, logout } = useAuth();
     const { theme } = useTheme();
     const navigate = useNavigate();
+    const firstName = user?.name?.split(' ')[0] || 'Guest';
     const [announcement, setAnnouncement] = useState(null);
     const [loading, setLoading] = useState(true);
     const [weather, setWeather] = useState({ tempC: 24, category: 'Clear', condition: 'Sunny' });
     const [stability, setStability] = useState({ index: 95, status: 'Stable' });
     const [offers, setOffers] = useState([]);
+    const [typedName, setTypedName] = useState('');
 
     useEffect(() => {
         const fetchContextData = async () => {
@@ -98,6 +100,46 @@ export default function GuestPortal() {
         };
         fetchContextData();
     }, []);
+
+    useEffect(() => {
+        let timeoutId;
+        let currentIndex = 0;
+        let isDeleting = false;
+
+        const animateName = () => {
+            if (!isDeleting) {
+                currentIndex += 1;
+                setTypedName(firstName.slice(0, currentIndex));
+
+                if (currentIndex === firstName.length) {
+                    timeoutId = setTimeout(() => {
+                        isDeleting = true;
+                        animateName();
+                    }, 1200);
+                    return;
+                }
+
+                timeoutId = setTimeout(animateName, 120);
+                return;
+            }
+
+            currentIndex -= 1;
+            setTypedName(firstName.slice(0, Math.max(currentIndex, 0)));
+
+            if (currentIndex <= 0) {
+                isDeleting = false;
+                timeoutId = setTimeout(animateName, 350);
+                return;
+            }
+
+            timeoutId = setTimeout(animateName, 70);
+        };
+
+        setTypedName('');
+        timeoutId = setTimeout(animateName, 400);
+
+        return () => clearTimeout(timeoutId);
+    }, [firstName]);
 
     const handleLogout = () => {
         logout();
@@ -170,11 +212,12 @@ export default function GuestPortal() {
             <div className="max-w-7xl mx-auto px-6 mt-20">
                 {/* Greeting */}
                 <div className="mb-16">
-                    <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#C5A059] mb-4 block">Personalized Sanctuary</span>
+                    {/* <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#C5A059] mb-4 block">Personalized Sanctuary</span> */}
                     <h1 className="text-4xl md:text-7xl font-serif font-black tracking-tight leading-tight transition-all duration-700">
-                        Welcome back, <br />
+                        Welcome back{' '}
                         <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[#C5A059] to-[#D4AF37]">
-                            {user?.name?.split(' ')[0]}.
+                            {typedName}
+                            <span className="animate-pulse">|</span>
                         </span>
                     </h1>
                     <p className="mt-6 text-slate-500 font-medium tracking-wide animate-fade-in transition-all duration-1000">

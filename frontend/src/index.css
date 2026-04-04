@@ -17,11 +17,11 @@
   }
 
   .dark {
-    --background: #0F1115;
+    --background: #020324;
     --foreground: #E5E7EB;
-    --card: #1A1D23;
+    --card: #080B3D;
     --card-foreground: #E5E7EB;
-    --border: #2D3139;
+    --border: #1A1F5C;
     --gold: #D4AF37;
     --gold-hover: #C5A059;
     --indigo-soft: #818CF8;
@@ -52,7 +52,7 @@
     background: rgba(255, 255, 255, 0.6);
   }
   .dark .glass-card {
-    background: rgba(26, 29, 35, 0.6);
+    background: rgba(8, 11, 61, 0.72);
   }
 
   .btn-gold {
