@@ -1,15 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { MessageSquare, Send, Loader2, CheckCircle } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../api/client';
 
 export default function SMSCampaignCenter({ actions, roomDemand }) {
     const { theme } = useTheme();
     const [message, setMessage] = useState('');
     const [status, setStatus] = useState('idle'); // idle, sending, success
+    const [announcements, setAnnouncements] = useState([]);
+    const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
 
     const checkedInGuests = roomDemand ? Math.floor(roomDemand * 1.5) : 0;
+
+    const fetchAnnouncements = async () => {
+        try {
+            const res = await apiClient.get('/revenue/announcements');
+            setAnnouncements(res.data);
+            setLoadingAnnouncements(false);
+        } catch (err) {
+            console.error('Failed to fetch announcements');
+            setLoadingAnnouncements(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchAnnouncements();
+    }, []);
 
     useEffect(() => {
         if (actions && actions.length > 0) {
@@ -30,15 +47,25 @@ export default function SMSCampaignCenter({ actions, roomDemand }) {
     }, [actions]);
 
     const handleBroadcast = async () => {
-        if (status !== 'idle') return;
+        if (status !== 'idle' || !message.trim()) return;
         setStatus('sending');
         try {
             await apiClient.post('/revenue/announcement', { message });
             setStatus('success');
+            fetchAnnouncements();
             setTimeout(() => setStatus('idle'), 5000);
         } catch (err) {
             console.error('Failed to broadcast announcement');
             setStatus('idle');
+        }
+    };
+
+    const handleDelete = async (id) => {
+        try {
+            await apiClient.delete(`/revenue/announcement/${id}`);
+            fetchAnnouncements();
+        } catch (err) {
+            console.error('Failed to delete announcement');
         }
     };
 
@@ -110,11 +137,59 @@ export default function SMSCampaignCenter({ actions, roomDemand }) {
                     <motion.p 
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-[10px] font-black text-emerald-500 text-center uppercase tracking-widest"
+                        className="text-[10px] font-black text-emerald-500 text-center uppercase tracking-widest mt-4"
                     >
                         ✓ Campaign successfully broadcasted to {checkedInGuests} guests.
                     </motion.p>
                 )}
+
+                {/* Active Announcements List */}
+                <div className="mt-12 pt-12 border-t border-[var(--border)] dark:border-white/5">
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h3 className="text-sm font-serif font-black tracking-tight leading-none mb-2">Active Broadcasts</h3>
+                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Management of live on-property offers</p>
+                        </div>
+                        <span className="text-[9px] font-black bg-[#C5A059]/10 text-[#C5A059] px-3 py-1 rounded-full uppercase tracking-widest">
+                            {announcements.length} Active
+                        </span>
+                    </div>
+
+                    <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin">
+                        <AnimatePresence>
+                            {announcements.length > 0 ? (
+                                announcements.map((ann, idx) => (
+                                    <motion.div 
+                                        key={ann._id}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 20 }}
+                                        className="p-5 rounded-3xl bg-stone-50 dark:bg-white/5 border border-[var(--border)] dark:border-white/5 group/item hover:border-[#C5A059]/20 transition-all flex flex-col gap-4"
+                                    >
+                                        <p className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-relaxed italic">
+                                            "{ann.message}"
+                                        </p>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                                Created {new Date(ann.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                            <button 
+                                                onClick={() => handleDelete(ann._id)}
+                                                className="bg-rose-500/10 text-rose-500 px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+                                            >
+                                                Remove Offer
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                ))
+                            ) : (
+                                <div className="py-10 text-center bg-stone-50/50 dark:bg-white/5 rounded-3xl border border-dashed border-[var(--border)] dark:border-white/5">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No active marketing broadcasts found.</p>
+                                </div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </div>
             </div>
         </div>
     );

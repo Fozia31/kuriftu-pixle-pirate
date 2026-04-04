@@ -134,11 +134,36 @@ export default function AssistantBubble({ dashboardContext }) {
                         <div ref={messagesEndRef} />
                     </div>
 
-                    {/* Quick Questions Removed */}
+                    {/* Resort FAQ Quick Actions */}
+                    {messages.length < 5 && (
+                        <div className="px-5 py-4 bg-gray-50/50 dark:bg-black/20 border-t border-gray-100 dark:border-white/5">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <Sparkles size={10} className="text-[#C5A059]" />
+                                Resort FAQ
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                                {[
+                                    "✨ Spa hours & booking?",
+                                    "🌊 Waterpark access info",
+                                    "🏨 Check-in/out times",
+                                    "📽️ Cinema & Dining info"
+                                ].map((faq, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => sendMessage(faq.replace(/^[^\s]+\s/, ''))}
+                                        className="px-3 py-1.5 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:border-[#C5A059] hover:text-[#C5A059] transition-all group shrink-0 active:scale-95"
+                                    >
+                                        {faq}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Input */}
-                    <div className="p-4 border-t border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-transparent">
-                        <div className="flex gap-3 items-center bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-4 py-3 focus-within:border-gold-500/40 dark:focus-within:border-indigo-500/40 transition-all shadow-sm">
+                    {/* Chat Input Interface */}
+                    <div className="p-4 border-t border-gray-100 dark:border-white/5 bg-white dark:bg-[#10192D]">
+                        <div className="flex gap-3 items-center bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-4 py-3 focus-within:border-[#C5A059]/40 transition-all shadow-sm group">
                             <input
                                 value={input}
                                 onChange={e => setInput(e.target.value)}
