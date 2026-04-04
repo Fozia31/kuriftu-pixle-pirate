@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@mantine/core": "^9.0.0",
+    "@mantine/hooks": "^9.0.0",
     "axios": "^1.14.0",
     "ethiopian-calendar-date-converter": "^2.1.6",
     "framer-motion": "^12.38.0",

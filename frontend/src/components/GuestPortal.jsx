@@ -5,6 +5,9 @@ import AssistantBubble from './AssistantBubble';
 import ThemeToggle from './ThemeToggle';
 import apiClient from '../api/client';
 import { useNavigate } from 'react-router-dom';
+import experienceImage from '../assets/experience.jpg';
+import { EXPERIENCES } from '../data/experiences';
+
 import { 
     Hotel, 
     Wind, 
@@ -19,16 +22,26 @@ import {
     Cloud
 } from 'lucide-react';
 
+const iconMap = {
+    hotel: Hotel,
+    wind: Wind,
+    palmtree: Palmtree,
+    utensils: UtensilsCrossed,
+    compass: Compass
+};
+
 export default function GuestPortal() {
     const { user, logout } = useAuth();
     const { theme } = useTheme();
     const navigate = useNavigate();
+    const firstName = user?.name?.split(' ')[0] || 'Guest';
     const [announcement, setAnnouncement] = useState(null);
     const [loading, setLoading] = useState(true);
     const [weather, setWeather] = useState({ tempC: 24, category: 'Clear', condition: 'Sunny', city: 'Bishoftu' });
     const [stability, setStability] = useState({ index: 95, status: 'Stable' });
     const [offers, setOffers] = useState([]);
     const [branch, setBranch] = useState('Kuriftu Resort & Spa Bishoftu (Debre Zeit)');
+    
 
     useEffect(() => {
         const fetchContextData = async () => {
@@ -90,6 +103,46 @@ export default function GuestPortal() {
         fetchContextData();
     }, [branch]);
 
+    useEffect(() => {
+        let timeoutId;
+        let currentIndex = 0;
+        let isDeleting = false;
+
+        const animateName = () => {
+            if (!isDeleting) {
+                currentIndex += 1;
+                setTypedName(firstName.slice(0, currentIndex));
+
+                if (currentIndex === firstName.length) {
+                    timeoutId = setTimeout(() => {
+                        isDeleting = true;
+                        animateName();
+                    }, 1200);
+                    return;
+                }
+
+                timeoutId = setTimeout(animateName, 120);
+                return;
+            }
+
+            currentIndex -= 1;
+            setTypedName(firstName.slice(0, Math.max(currentIndex, 0)));
+
+            if (currentIndex <= 0) {
+                isDeleting = false;
+                timeoutId = setTimeout(animateName, 350);
+                return;
+            }
+
+            timeoutId = setTimeout(animateName, 70);
+        };
+
+        setTypedName('');
+        timeoutId = setTimeout(animateName, 400);
+
+        return () => clearTimeout(timeoutId);
+    }, [firstName]);
+
     const handleLogout = () => {
         logout();
         navigate('/');
@@ -104,53 +157,26 @@ export default function GuestPortal() {
         }
         return `The perfect afternoon for a breathtaking lakeside escape.`;
     };
-
+    
     const getWeatherIcon = () => {
         if (weather.category === 'Rain') return <CloudRain className="text-blue-400" size={16} />;
         if (weather.category === 'Cloud') return <Cloud className="text-slate-400" size={16} />;
         return <Sun className="text-amber-400" size={16} />;
     };
 
-    const SERVICES = [
-        { 
-            id: 'suites', 
-            name: 'Presidential Suites', 
-            image: "https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&q=80&w=600",
-            subtitle: "Lakeside Serenity",
-            desc: 'Experience the pinnacle of Ethiopian luxury in our lakeside suites, featuring 24/7 personalized butler service and panoramic views of Lake Bishoftu.',
-            tag: 'Premium Selection',
-            icon: <Hotel size={20} />
-        },
-        { 
-            id: 'spa', 
-            name: 'Spa & Wellness', 
-            image: "https://images.unsplash.com/photo-1544161515-4ae6b91829d2?auto=format&fit=crop&q=80&w=600",
-            subtitle: "Ancient Ethio-Therapy",
-            desc: 'Our signature 90-minute Ethiopian Coffee Scrub and hot stone massage, curated by AI based on your wellness profile.',
-            tag: 'AI Recommended', 
-            special: true,
-            reasoning: weather.category === 'Rain' ? 'Recommended due to rainy weather conditions.' : 'Personalized based on your wellness preference.',
-            icon: <Wind size={20} />
-        },
-        { 
-            id: 'dining', 
-            name: 'Lakeside Gastronomy', 
-            image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=600",
-            subtitle: "Gourmet Fusion",
-            desc: 'A five-course tasting menu blending traditional Ethiopian flavors with modern international fine dining, curated for the sunset hour.',
-            tag: 'Chef\'s Choice',
-            icon: <UtensilsCrossed size={20} />
-        },
-        { 
-            id: 'activities', 
-            name: 'Cultural Discovery', 
-            image: "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&q=80&w=600",
-            subtitle: "Heritage & Nature",
-            desc: 'Private guided tours of the Bishoftu crater lakes and historical cultural sites, optimized for the best lighting and weather conditions.',
-            tag: 'Expertly Curated',
-            icon: <Palmtree size={20} />
-        },
-    ];
+    const services = EXPERIENCES.map((service) => {
+        const Icon = iconMap[service.iconKey];
+
+        return {
+            ...service,
+            reasoning: service.id === 'spa'
+                ? (weather.category === 'Rain'
+                    ? 'Recommended due to rainy weather conditions.'
+                    : 'Personalized based on your wellness preference.')
+                : null,
+            icon: Icon ? <Icon size={20} /> : null
+        };
+    });
 
     return (
         <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] font-sans transition-colors duration-500 pb-20 overflow-x-hidden">
@@ -187,11 +213,12 @@ export default function GuestPortal() {
             <div className="max-w-7xl mx-auto px-6 mt-20">
                 {/* Greeting */}
                 <div className="mb-16">
-                    <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#C5A059] mb-4 block">Personalized Sanctuary</span>
+                    {/* <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#C5A059] mb-4 block">Personalized Sanctuary</span> */}
                     <h1 className="text-4xl md:text-7xl font-serif font-black tracking-tight leading-tight transition-all duration-700">
-                        Welcome back, <br />
+                        Welcome back{' '}
                         <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[#C5A059] to-[#D4AF37]">
-                            {user?.name?.split(' ')[0]}.
+                            {typedName}
+                            <span className="animate-pulse">|</span>
                         </span>
                     </h1>
                     <div className="mt-8 flex flex-col sm:flex-row sm:items-center gap-4 text-slate-500 font-medium tracking-wide animate-fade-in transition-all duration-1000">
@@ -243,9 +270,9 @@ export default function GuestPortal() {
                                     </p>
                                 </div>
                             </div>
-                            <button className={`text-white px-10 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl transition-all duration-500 active:scale-95 relative z-10 whitespace-nowrap ${announcement ? 'bg-indigo-600 hover:shadow-indigo-500/30' : 'bg-gradient-to-r from-[#C5A059] to-[#D4AF37] hover:shadow-amber-500/30'}`}>
+                            {/* <button className={`text-white px-10 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl transition-all duration-500 active:scale-95 relative z-10 whitespace-nowrap ${announcement ? 'bg-indigo-600 hover:shadow-indigo-500/30' : 'bg-gradient-to-r from-[#C5A059] to-[#D4AF37] hover:shadow-amber-500/30'}`}>
                                 {announcement ? 'Claim Live Offer' : (offers[0]?.buttonText || 'Claim Privilege')}
-                            </button>
+                            </button> */}
                         </div>
                     </div>
                 )}
@@ -259,8 +286,8 @@ export default function GuestPortal() {
                 </div>
 
                 {/* Service Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    {SERVICES.map((svc, idx) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
+                    {services.map((svc) => (
                         <div key={svc.id} className="group relative bg-[var(--card)] border border-[var(--border)] dark:border-white/5 rounded-[40px] hover:shadow-2xl hover:shadow-[#C5A059]/5 transition-all duration-700 overflow-hidden hover:-translate-y-3">
                             {/* Image Container */}
                             <div className="aspect-[16/9] overflow-hidden relative">
@@ -304,7 +331,10 @@ export default function GuestPortal() {
                                 </p>
 
                                 <div className="flex items-center justify-between pt-6 border-t border-[var(--border)] dark:border-white/5">
-                                    <button className="text-[10px] font-black uppercase tracking-widest text-[#C5A059] hover:tracking-[0.3em] transition-all flex items-center gap-3">
+                                    <button
+                                        onClick={() => navigate(`/experience/${svc.id}`)}
+                                        className="text-[10px] font-black uppercase tracking-widest text-[#C5A059] hover:tracking-[0.3em] transition-all flex items-center gap-3"
+                                    >
                                         Explore Details <Compass size={14} className="group-hover:rotate-45 transition-transform duration-500" />
                                     </button>
                                 </div>
@@ -319,7 +349,7 @@ export default function GuestPortal() {
                     <div className="relative z-10 flex flex-col lg:flex-row items-center gap-16 p-12">
                         <div className="w-56 h-72 sm:w-80 sm:h-96 shrink-0 rounded-[44px] overflow-hidden border border-[var(--border)] shadow-2xl relative group">
                             <img 
-                                src={weather.category === 'Rain' ? 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2070&auto=format&fit=crop' : 'https://images.unsplash.com/photo-1544161515-4ae6b91829d2?q=80&w=2070&auto=format&fit=crop'} 
+                                src={experienceImage}
                                 alt="Experience" 
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" 
                             />
