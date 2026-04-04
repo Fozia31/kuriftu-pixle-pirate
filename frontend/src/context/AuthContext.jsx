@@ -15,9 +15,15 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     }, []);
 
+    const getBaseUrl = () => {
+        return (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? 'http://localhost:3000/api'
+            : 'https://kuriftu-pixle-pirate.onrender.com/api';
+    };
+
     const login = async (email, password) => {
         try {
-            const res = await axios.post('https://kuriftu-pixle-pirate.onrender.com/api/auth/login', { email, password });
+            const res = await axios.post(`${getBaseUrl()}/auth/login`, { email, password });
             setUser(res.data);
             localStorage.setItem('kuriftu_user', JSON.stringify(res.data));
             return { success: true };
@@ -26,9 +32,9 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const signup = async (name, email, password, role) => {
+    const signup = async (name, email, password, role, preferences = []) => {
         try {
-            const res = await axios.post('https://kuriftu-pixle-pirate.onrender.com/api/auth/signup', { name, email, password, role });
+            const res = await axios.post(`${getBaseUrl()}/auth/signup`, { name, email, password, role, preferences });
             setUser(res.data);
             localStorage.setItem('kuriftu_user', JSON.stringify(res.data));
             return { success: true };

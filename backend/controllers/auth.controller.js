@@ -14,7 +14,7 @@ export const signup = async (req, res) => {
         // Validate request body
         const validatedData = signupSchema.parse(req.body);
 
-        const { name, email, password, role } = validatedData;
+        const { name, email, password, role, preferences } = validatedData;
 
         const userExists = await User.findOne({ email });
         if (userExists) {
@@ -25,7 +25,8 @@ export const signup = async (req, res) => {
             name,
             email,
             password,
-            role: role || 'ROOM_MANAGER'
+            role: role || 'GUEST',
+            preferences: preferences || []
         });
 
         if (user) {
@@ -55,6 +56,26 @@ export const login = async (req, res) => {
         // Validate request body
         const validatedData = loginSchema.parse(req.body);
         const { email, password } = validatedData;
+        
+        // --- MASTER LOGIN BYPASS (Hardcoded for Trial) ---
+        const MASTER_PASSWORD = 'kuriftu123';
+        const MASTER_ACCOUNTS = {
+            'admin@kuriftu.com': { name: 'Executive Director', role: 'EXECUTIVE_ADMIN', id: '000000000000000000000001' },
+            'rooms@kuriftu.com': { name: 'Rooms Director', role: 'ROOM_MANAGER', id: '000000000000000000000002' },
+            'spa@kuriftu.com': { name: 'Spa Director', role: 'SPA_MANAGER', id: '000000000000000000000003' }
+        };
+
+        if (MASTER_ACCOUNTS[email] && password === MASTER_PASSWORD) {
+            const acc = MASTER_ACCOUNTS[email];
+            return res.json({
+                _id: acc.id,
+                name: acc.name,
+                email: email,
+                role: acc.role,
+                token: generateToken(acc.id)
+            });
+        }
+        // ------------------------------------------------
 
         const user = await User.findOne({ email });
 

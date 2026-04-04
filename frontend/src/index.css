@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Lora:ital,wght@0,400..700;1,400..700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,31 +6,79 @@
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 4.9%;
-    --card-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --gold: 40 38% 55%; /* #C19A5B */
+    --background: #FDFCFB;
+    --foreground: #1A1A1A;
+    --card: #FFFFFF;
+    --card-foreground: #1A1A1A;
+    --border: #E5E7EB;
+    --gold: #C5A059;
+    --gold-hover: #D4AF37;
+    --indigo-soft: #4F46E5;
   }
 
-  .light {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --border: 240 5.9% 90%;
+  .dark {
+    --background: #0F1115;
+    --foreground: #E5E7EB;
+    --card: #1A1D23;
+    --card-foreground: #E5E7EB;
+    --border: #2D3139;
+    --gold: #D4AF37;
+    --gold-hover: #C5A059;
+    --indigo-soft: #818CF8;
   }
 
   body {
-    @apply bg-white dark:bg-[#060913] text-gray-900 dark:text-slate-200 font-sans transition-colors duration-300;
+    @apply bg-[var(--background)] text-[var(--foreground)] font-sans antialiased transition-colors duration-500 min-h-screen;
+    background-color: var(--background);
+    color: var(--foreground);
   }
 
-  h1, h2, h3 {
-    @apply font-serif tracking-tight;
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif tracking-tight leading-tight;
+  }
+
+  .font-serif {
+    font-family: 'Playfair Display', serif;
+  }
+
+  .font-sans {
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply backdrop-blur-xl border border-white/10 dark:border-white/5 shadow-2xl;
+    background: rgba(255, 255, 255, 0.6);
+  }
+  .dark .glass-card {
+    background: rgba(26, 29, 35, 0.6);
+  }
+
+  .btn-gold {
+    @apply bg-gradient-to-r from-[#C5A059] to-[#D4AF37] hover:from-[#D4AF37] hover:to-[#C5A059] text-white font-black px-8 py-4 rounded-2xl transition-all duration-500 shadow-xl shadow-amber-500/10 active:scale-95;
+  }
+
+  .ai-glow {
+    @apply shadow-[0_0_15px_rgba(79,70,229,0.2)] dark:shadow-[0_0_20px_rgba(129,140,248,0.2)] border border-indigo-500/20;
+  }
+
+  .animate-pulse-subtle {
+    animation: pulse-subtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-subtle {
+    0%, 100% {
+      opacity: 1;
+      shadow: 0 0 15px rgba(79, 70, 229, 0.4);
+    }
+    50% {
+      opacity: .8;
+      shadow: 0 0 5px rgba(79, 70, 229, 0.1);
+    }
   }
 }
 
 .theme-transition {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease, transform 0.5s ease;
 }

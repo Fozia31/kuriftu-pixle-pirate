@@ -11,7 +11,13 @@ export const chat = async (req, res) => {
         const response = await generateAssistantResponse(query, dashboardContext || {});
         res.json({ response });
     } catch (error) {
-        console.error('Chat Error:', error);
-        res.status(500).json({ error: error.message });
+        console.error('CRITICAL CHAT ERROR:', error.message);
+        if (error.response) {
+            console.error('API Error Details:', error.response.data);
+        }
+        res.status(500).json({ 
+            error: "The AI Assistant is temporarily unavailable.", 
+            detail: error.message 
+        });
     }
 };

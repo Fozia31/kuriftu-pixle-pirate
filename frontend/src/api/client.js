@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-    baseURL: 'https://kuriftu-pixle-pirate.onrender.com/api',
+    baseURL: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:3000/api'
+        : 'https://kuriftu-pixle-pirate.onrender.com/api',
     headers: {
         'Content-Type': 'application/json',
     },

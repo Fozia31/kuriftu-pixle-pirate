@@ -21,8 +21,12 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['EXECUTIVE_ADMIN', 'ROOM_MANAGER', 'SPA_MANAGER'],
-        default: 'ROOM_MANAGER'
+        enum: ['EXECUTIVE_ADMIN', 'ROOM_MANAGER', 'SPA_MANAGER', 'GUEST'],
+        default: 'GUEST'
+    },
+    preferences: {
+        type: [String],
+        default: []
     }
 }, {
     timestamps: true
