@@ -5,7 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './components/Dashboard';
 import Login from './components/Login';
 import Signup from './components/Signup';
-import LandingPage from './components/LandingPage';
+import Footer from './components/Footer';
 import GuestPortal from './components/GuestPortal';
 
 function App() {
@@ -13,31 +13,32 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <Router>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            
-            {/* Guest Protected Routes */}
-            <Route
-              path="/experience"
-              element={
-                <ProtectedRoute allowedRoles={['GUEST']}>
-                  <GuestPortal />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Admin Protected Routes */}
-            <Route
-              path="/admin/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['EXECUTIVE_ADMIN', 'ROOM_MANAGER', 'SPA_MANAGER']}>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
+          <div className="flex flex-col min-h-screen">
+            <div className="flex-grow">
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/experience" element={<ProtectedRoute><GuestPortal /></ProtectedRoute>} />
+                <Route
+                  path="/admin/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </div>
+            <Footer />
+          </div>
         </Router>
       </AuthProvider>
     </ThemeProvider>

@@ -122,9 +122,7 @@ export default function Dashboard() {
             <nav className="sticky top-0 z-50 bg-[var(--background)]/80 backdrop-blur-xl border-b border-[var(--border)] dark:border-white/5">
                 <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <div className="bg-gradient-to-br from-[#C5A059] to-[#D4AF37] w-10 h-10 rounded-xl shadow-lg flex items-center justify-center">
-                            <Compass className="text-white" size={24} />
-                        </div>
+                        <img src="/logo-transparent.png" alt="Kuriftu Logo" className="w-12 h-12 object-contain" />
                         <div>
                             <h1 className="text-xl font-serif font-black tracking-tight leading-none mb-1">Kuriftu Intelligence</h1>
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Executive Strategy Terminal</p>
@@ -237,8 +235,8 @@ export default function Dashboard() {
                                     <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mt-2">Predicted Departmental Revenue Share</p>
                                 </div>
                             </div>
-                            <div className="flex-1 w-full">
-                                <ResponsiveContainer width="100%" height="100%">
+                            <div className="flex-1 w-full" style={{ minHeight: '350px' }}>
+                                <ResponsiveContainer width="100%" height={350}>
                                     <BarChart data={chartData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} vertical={false} />
                                         <XAxis dataKey="day" stroke="currentColor" tick={{ fontSize: 10, fontWeight: 800, opacity: 0.4 }} tickLine={false} axisLine={false} dy={15} />

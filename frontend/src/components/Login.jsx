@@ -49,9 +49,7 @@ export default function Login() {
                 className="max-w-md w-full bg-[var(--card)] border border-[var(--border)] dark:border-white/5 p-12 rounded-[56px] shadow-2xl relative z-10"
             >
                 <div className="text-center mb-12">
-                    <div className="inline-flex items-center justify-center bg-gradient-to-br from-[#C5A059] to-[#D4AF37] w-14 h-14 rounded-[22px] shadow-lg shadow-amber-500/20 mb-6">
-                        <LogIn className="text-white" size={28} />
-                    </div>
+                    <img src="/logo-transparent.png" alt="Kuriftu Logo" className="w-16 h-16 object-contain mx-auto mb-6" />
                     <h1 className="text-4xl font-serif font-black tracking-tight mb-2">Member Login</h1>
                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Access the Kuriftu Intelligence Ecosystem</p>
                 </div>
