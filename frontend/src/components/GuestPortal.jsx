@@ -5,6 +5,12 @@ import AssistantBubble from './AssistantBubble';
 import ThemeToggle from './ThemeToggle';
 import apiClient from '../api/client';
 import { useNavigate } from 'react-router-dom';
+import accommodationImage from '../assets/Accommodation.jpg';
+import diningBarImage from '../assets/dining&bar.jpg';
+import eventsMeetingsImage from '../assets/events&meetings.jpg';
+import spaImage from '../assets/spa.jpg';
+import waterParkImage from '../assets/kuriftu-water-park.jpg';
+
 import { 
     Hotel, 
     Wind, 
@@ -103,7 +109,7 @@ export default function GuestPortal() {
         }
         return `${base} The perfect afternoon for a breathtaking lakeside escape.`;
     };
-
+    
     const getWeatherIcon = () => {
         if (weather.category === 'Rain') return <CloudRain className="text-blue-400" size={16} />;
         if (weather.category === 'Cloud') return <Cloud className="text-slate-400" size={16} />;
@@ -114,7 +120,7 @@ export default function GuestPortal() {
         { 
             id: 'suites', 
             name: 'Presidential Suites', 
-            image: "https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&q=80&w=600",
+            image: accommodationImage,
             subtitle: "Lakeside Serenity",
             desc: 'Experience the pinnacle of Ethiopian luxury in our lakeside suites, featuring 24/7 personalized butler service and panoramic views of Lake Bishoftu.',
             tag: 'Premium Selection',
@@ -123,7 +129,7 @@ export default function GuestPortal() {
         { 
             id: 'spa', 
             name: 'Spa & Wellness', 
-            image: "https://images.unsplash.com/photo-1544161515-4ae6b91829d2?auto=format&fit=crop&q=80&w=600",
+            image: spaImage,
             subtitle: "Ancient Ethio-Therapy",
             desc: 'Our signature 90-minute Ethiopian Coffee Scrub and hot stone massage, curated by AI based on your wellness profile.',
             tag: 'AI Recommended', 
@@ -134,20 +140,29 @@ export default function GuestPortal() {
         { 
             id: 'dining', 
             name: 'Lakeside Gastronomy', 
-            image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=600",
+            image: diningBarImage,
             subtitle: "Gourmet Fusion",
             desc: 'A five-course tasting menu blending traditional Ethiopian flavors with modern international fine dining, curated for the sunset hour.',
             tag: 'Chef\'s Choice',
             icon: <UtensilsCrossed size={20} />
         },
         { 
-            id: 'activities', 
-            name: 'Cultural Discovery', 
-            image: "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&q=80&w=600",
-            subtitle: "Heritage & Nature",
-            desc: 'Private guided tours of the Bishoftu crater lakes and historical cultural sites, optimized for the best lighting and weather conditions.',
-            tag: 'Expertly Curated',
+            id: 'water-park', 
+            name: 'Kuriftu Water Park', 
+            image: waterParkImage,
+            subtitle: "Adventure & Play",
+            desc: 'Spend the day with resort slides, splash zones, and vibrant poolside energy tailored for families and fun-seekers alike.',
+            tag: 'Family Favorite',
             icon: <Palmtree size={20} />
+        },
+        { 
+            id: 'events-meetings', 
+            name: 'Events & Meetings', 
+            image: eventsMeetingsImage,
+            subtitle: "Celebrate in Style",
+            desc: 'Host polished corporate sessions, intimate gatherings, and standout celebrations in curated spaces backed by resort hospitality.',
+            tag: 'Signature Venue',
+            icon: <Compass size={20} />
         },
     ];
 
@@ -240,7 +255,7 @@ export default function GuestPortal() {
                 </div>
 
                 {/* Service Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
                     {SERVICES.map((svc, idx) => (
                         <div key={svc.id} className="group relative bg-[var(--card)] border border-[var(--border)] dark:border-white/5 rounded-[40px] hover:shadow-2xl hover:shadow-[#C5A059]/5 transition-all duration-700 overflow-hidden hover:-translate-y-3">
                             {/* Image Container */}
