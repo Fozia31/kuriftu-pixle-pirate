@@ -7,6 +7,7 @@ import Login from './components/Login';
 import Signup from './components/Signup';
 import LandingPage from './components/LandingPage';
 import GuestPortal from './components/GuestPortal';
+import ExperienceDetailPage from './components/experience-details';
 import '@mantine/core/styles.css';
 
 function App() {
@@ -25,6 +26,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['GUEST']}>
                   <GuestPortal />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/experience/:id"
+              element={
+                <ProtectedRoute allowedRoles={['GUEST']}>
+                  <ExperienceDetailPage />
                 </ProtectedRoute>
               }
             />
