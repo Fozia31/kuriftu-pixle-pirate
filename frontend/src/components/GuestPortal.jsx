@@ -210,7 +210,7 @@ export default function GuestPortal() {
             </nav>
 
             <div className="max-w-7xl mx-auto px-6 mt-20">
-                {/* Greeting */}
+                {/* Greetings */}
                 <div className="mb-16">
                     {/* <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#C5A059] mb-4 block">Personalized Sanctuary</span> */}
                     <h1 className="text-4xl md:text-7xl font-serif font-black tracking-tight leading-tight transition-all duration-700">
